@@ -11,5 +11,3 @@ if __name__ == '__main__':
 
     # Start game
     game = Game(board_params=board_params, player_names=player_names)
-    game.play_game()
-    breakpoint()

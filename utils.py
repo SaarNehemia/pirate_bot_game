@@ -1,10 +1,5 @@
 import pygame as pg
 
-DIRECTION_DICT = {'N': (0, 1),
-                  'S': (0, -1),
-                  'W': (-1, 0),
-                  'E': (1, 0)}
-
 COLORS_DICT = {'Sea': (170, 255, 245),  # Light blue
                'Block': (0, 0, 0),  # Black
                'Island': (208, 130, 40),  # Brown
@@ -19,6 +14,7 @@ SIZE_DICT = {'Block': (10, 10),
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
+
 class FrontEndObj(pg.sprite.Sprite):
     def __init__(self, name, **kwargs):
         super(FrontEndObj, self).__init__()
@@ -30,15 +26,24 @@ class FrontEndObj(pg.sprite.Sprite):
         else:  # For Block and Island
             self.surf.fill(COLORS_DICT[name])
         self.rect = self.surf.get_rect()
-        self.frontend_location = (0, 0)
 
     def draw_sprite(self, screen, location, board_size):
+        frontend_location = self.get_frontend_location(location, board_size)
+        screen.blit(self.surf, frontend_location)
+        pass
+
+    def move_sprite(self, num_steps, step):
+        for _ in range(num_steps):
+            self.rect.move_ip(step)
+        pass
+
+    @staticmethod
+    def get_frontend_location(location, board_size):
         width_board_size = SCREEN_WIDTH / board_size
         height_board_size = SCREEN_HEIGHT / board_size
-        self.frontend_location = (location[0] * width_board_size,
-                                  location[1] * height_board_size)
-        screen.blit(self.surf, self.frontend_location)
-        pass
+        frontend_location = (location[0] * width_board_size,
+                             location[1] * height_board_size)
+        return frontend_location
 
     def change_to_player_color(self, player_id):
         """ Change to player color once conquered by a player"""
