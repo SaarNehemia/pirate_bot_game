@@ -1,15 +1,10 @@
-DIRECTION_DICT = {'N': (0, 1),
-                  'S': (0, -1),
-                  'W': (-1, 0),
-                  'E': (1, 0)}
+import pygame as pg
+import utils
 
 
 class Ship:
-    def __init__(self, player_id: int, ship_id: int, ship_speed: float, location: tuple):
+    def __init__(self, player_id: int, ship_speed: float, location: tuple):
         self.player_id = player_id
-        self.ship_id = ship_id
         self.ship_speed = ship_speed
         self.location = location
-
-    def move_ship(self, direction):
-        self.location = self.location + self.ship_speed * DIRECTION_DICT[direction]
+        self.frontend_obj = utils.FrontEndObj(name='Player', player_id=self.player_id)
