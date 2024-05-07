@@ -9,15 +9,17 @@ from classes.ship import Ship
 class Game:
     def __init__(self, board_params: dict, player_names: list[str]):
 
-        # init board
+        # init API
         self.game_api = API(board_params=board_params,
                             player_names=player_names)
 
-        # Init screen
-        self.screen = []
+        # Init screen (frontend) and board (backend)
+        pg.init()
+        self.all_sprites = pg.sprite.Group()
+        self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
+        self.init_board()
 
         # Start game
-        self.init_game()
         self.game_loop()
 
     def game_loop(self):
@@ -36,19 +38,18 @@ class Game:
                 player_won = ""
                 print(f"{player_won} won!")
 
-            # Play players turns
-            for player in self.game_api.players:
-                player.player_do_turn_func(self.game_api)
+            # Update screen
+            self.draw_all_sprites()
 
-            # Update frontend
-            pg.display.flip()
-            breakpoint()
+            # Play players turns
+            print(f'Starting turn {self.game_api.num_turn}:')
+            for player in self.game_api.players:
+                print(f'{player.player_name} is now playing...')
+                player.player_do_turn_func(self.game_api)
+            self.game_api.num_turn += 1
+            print(f'Turn {self.game_api.num_turn} ended.')
 
         pg.quit()
-
-    def init_game(self):
-        self.init_board()
-        self.init_screen()
 
     def init_board(self):
         # Init board with 'Sea' tiles
@@ -82,17 +83,18 @@ class Game:
         for island in self.game_api.islands:
             self.game_api.board[island.location[0]][island.location[1]] = island
 
-    def init_screen(self):
-        # Fill all screen with sea (light blue)
-        pg.init()
-        self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
-        self.screen.fill(utils.COLORS_DICT['Sea'])
-
-        # Add blocks, islands and ships
+    def draw_all_sprites(self):
+        # Update all sprites from board
         for i in range(self.game_api.board_size):
             for j in range(self.game_api.board_size):
                 if self.game_api.board[i][j] != 'Sea':
-                    location = self.game_api.board[i][j].location
-                    self.game_api.board[i][j].frontend_obj.draw_sprite(self.screen, location, self.game_api.board_size)
-        pg.display.flip()
+                    current_obj = self.game_api.board[i][j]
+                    self.all_sprites.add(current_obj.frontend_obj)
 
+        # Draw all sprites on screen
+        self.screen.fill(utils.COLORS_DICT['Sea'])
+        for sprite in self.all_sprites:
+            sprite.draw_sprite(location=sprite.location,
+                               board_size=self.game_api.board_size,
+                               screen=self.screen)
+        pg.display.flip()

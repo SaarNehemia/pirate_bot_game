@@ -8,7 +8,7 @@ class Island:
         self.ships = []
         self.current_life = current_life
         self.ship_creation_time = ship_creation_time
-        self.frontend_obj = utils.FrontEndObj(name='Island')
+        self.frontend_obj: utils.FrontEndObj = utils.FrontEndObj(name='Island', location=location)
 
     def add_ship(self, ship):
         self.ships.append(ship)
