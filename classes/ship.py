@@ -3,7 +3,8 @@ import utils
 
 
 class Ship:
-    def __init__(self, player_id: int, ship_speed: int, location: tuple):
+    def __init__(self, player_id: int, ship_id: int, ship_speed: int, location: tuple):
+        self.ship_id = ship_id
         self.player_id = player_id
         self.ship_speed = ship_speed
         self.location = location

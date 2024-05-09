@@ -17,9 +17,9 @@ class Game:
         pg.init()
         self.all_sprites = pg.sprite.Group()
         self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
-        self.init_board()
 
         # Start game
+        self.init_board()
         self.game_loop()
 
     def game_loop(self):
@@ -46,8 +46,13 @@ class Game:
             for player in self.game_api.players:
                 print(f'{player.player_name} is now playing...')
                 player.player_do_turn_func(self.game_api)
-            self.game_api.num_turn += 1
+                self.update_islands_life()
             print(f'Turn {self.game_api.num_turn} ended.')
+
+            # print status and update turn
+            for player in self.game_api.players:
+                print(f"{player.player_name} has {len(player.ships)} ships left.")
+            self.game_api.num_turn += 1
 
         pg.quit()
 
@@ -62,6 +67,10 @@ class Game:
         for block in self.game_api.blocks:
             self.game_api.board[block.location[0]][block.location[1]] = block
 
+            # Add islands
+            for island in self.game_api.islands:
+                self.game_api.board[island.location[0]][island.location[1]] = island
+
         # Update players
         for player in self.game_api.players:
             # Get params
@@ -70,18 +79,17 @@ class Game:
             player_num_ships = self.game_api.players_num_ships[player.player_id]
             player_ship_speed = self.game_api.players_ship_speed[player.player_id]
 
-            # Init player ships and base island
+            # Update player base island
+            player_base_island.frontend_obj.change_to_player_color(player.player_id)
             player_base_island.own_player_id = player.player_id
-            base_island_location = player_base_island.location
-            player_base_island.ships = player_num_ships * [Ship(player_id=player.player_id,
-                                                                ship_speed=player_ship_speed,
-                                                                location=base_island_location
-                                                                )]
-            player.ships = player_base_island.ships
-
-        # Add islands
-        for island in self.game_api.islands:
-            self.game_api.board[island.location[0]][island.location[1]] = island
+            for ship_id in range(player_num_ships):
+                player_base_island.add_ship(Ship(ship_id=ship_id,
+                                                       player_id=player.player_id,
+                                                       ship_speed=player_ship_speed,
+                                                       location=player_base_island.location
+                                                       ))
+            # Update player ships
+            player.ships = list(player_base_island.ships)
 
     def draw_all_sprites(self):
         # Update all sprites from board
@@ -98,3 +106,24 @@ class Game:
                                board_size=self.game_api.board_size,
                                screen=self.screen)
         pg.display.flip()
+
+    def update_islands_life(self):
+        for island in self.game_api.islands:
+            for ship in island.ships:
+                # attack or defend island
+                last_life = island.current_life
+                island.current_life += 1 if ship.player_id == island.own_player_id else -1
+
+                # Island neutralized
+                if island.current_life == 0:
+                    island.own_player_id = ship.player_id
+
+            # Update island color in case needed
+            if island.own_player_id == -1:
+                island.frontend_obj.change_to_neutral_color()
+            else:
+                island.frontend_obj.change_to_player_color(island.own_player_id)
+
+            print(f'Island in {island.location} '
+                  f'is owned by {self.game_api.players[island.own_player_id].player_name} '
+                  f'with {island.current_life} HP')

@@ -3,14 +3,14 @@ import pygame as pg
 
 COLOR_LIGHT_BLUE = (170, 255, 245)
 COLOR_BLACK = (0, 0, 0)
-BROWN = (208, 130, 40)
-SKIN = (200, 200, 200)
-GRAY = (100, 100, 100)
+COLOR_BROWN = (208, 130, 40)
+COLOR_BLUE = (0, 0, 200)
+COLOR_RED = (200, 0, 0)
 
 COLORS_DICT = {'Sea': COLOR_LIGHT_BLUE,
                'Block': COLOR_BLACK,
-               'Island': BROWN,
-               'Player': [SKIN, GRAY],
+               'Island': COLOR_BROWN,
+               'Player': [COLOR_BLUE, COLOR_RED],
                }
 
 SIZE_DICT = {'Block': (10, 10),
@@ -54,14 +54,14 @@ class FrontEndObj(pg.sprite.Sprite):
         self.rect = self.surf.get_rect(center=frontend_location)
         screen.blit(self.surf, self.rect)
 
-    def update(self, num_steps, step, board_size, screen):
-        # move sprite
-        for _ in range(num_steps):
-            frontend_step = self.get_frontend_location(step, board_size)
-            self.rect.move_ip(frontend_step)
-            self.verify_frontend_location()
-            screen.blit(self.surf, self.rect)
-            pg.display.flip()
+    # def update(self, num_steps, step, board_size, screen):
+    #     # move sprite
+    #     for _ in range(num_steps):
+    #         frontend_step = self.get_frontend_location(step, board_size)
+    #         self.rect.move_ip(frontend_step)
+    #         self.verify_frontend_location()
+    #         screen.blit(self.surf, self.rect)
+    #         pg.display.flip()
 
     def verify_frontend_location(self):
         # Keep sprite on the screen
@@ -82,11 +82,15 @@ class FrontEndObj(pg.sprite.Sprite):
                              location[1] * height_scale_factor)
         return frontend_location
 
+    def change_to_player_color(self, player_id):
+        """ Change to player color once conquered by a player"""
+        player_color = COLORS_DICT['Player'][player_id]
+        self.surf.fill(player_color)
 
-def change_to_player_color(self, player_id):
-    """ Change to player color once conquered by a player"""
-    player_color = COLORS_DICT['Player'][player_id]
-    self.surf.fill(player_color)
+    def change_to_neutral_color(self):
+        """ Change to player color once conquered by a player"""
+        player_color = COLORS_DICT['Island']
+        self.surf.fill(player_color)
 
 
 def change_to_specific_color(self, color_name):

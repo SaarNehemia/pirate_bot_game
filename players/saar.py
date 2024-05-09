@@ -1,23 +1,13 @@
 import classes.api as game_api
 
-PLAYER_NAME = 'saar'
-
 
 def do_turn(game_api: game_api.API):
-    round_time = 500
-    if 0 <= game_api.num_turn % round_time < 0.25 * round_time:
-        my_player_obj = game_api.get_my_player_obj(PLAYER_NAME)
+    my_player_obj = game_api.get_my_player_obj()
+    if my_player_obj.ships:
         my_first_ship = my_player_obj.ships[0]
-        game_api.move_ship(ship=my_first_ship, direction='N')
-    elif 0.25 * round_time <= game_api.num_turn % round_time < 0.5 * round_time:
-        my_player_obj = game_api.get_my_player_obj(PLAYER_NAME)
-        my_first_ship = my_player_obj.ships[0]
-        game_api.move_ship(ship=my_first_ship, direction='E')
-    elif 0.5 * round_time <= game_api.num_turn % round_time < 0.75 * round_time:
-        my_player_obj = game_api.get_my_player_obj(PLAYER_NAME)
-        my_first_ship = my_player_obj.ships[0]
-        game_api.move_ship(ship=my_first_ship, direction='S')
-    elif 0.75 * round_time <= game_api.num_turn % round_time < round_time:
-        my_player_obj = game_api.get_my_player_obj(PLAYER_NAME)
-        my_first_ship = my_player_obj.ships[0]
-        game_api.move_ship(ship=my_first_ship, direction='W')
+    else:
+        return
+
+    enemy_player_id = ~my_player_obj.player_id
+    enemy_base_island_location = game_api.islands[game_api.players_base_islands_indices[enemy_player_id]].location
+    game_api.move_ship_towards_location(ship=my_first_ship, location=enemy_base_island_location)
