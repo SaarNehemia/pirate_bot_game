@@ -15,7 +15,8 @@ def extract_board_params(board_params):
         board_params['islands'], \
         board_params['players_base_islands_indices'], \
         board_params['players_ship_speed'], \
-        board_params['players_num_ships']
+        board_params['players_num_ships'],\
+        board_params['victory_criterion']
 
 
 class API():
@@ -29,7 +30,7 @@ class API():
 
         # Init board
         self.board_size, self.blocks, self.islands, self.players_base_islands_indices, \
-            self.players_ship_speed, self.players_num_ships = \
+            self.players_ship_speed, self.players_num_ships, self.victory_criterion = \
             extract_board_params(board_params)
         self.board = []  # Backend
 
@@ -45,6 +46,13 @@ class API():
 
     def get_my_player_id(self):
         return self.num_turn % len(self.players)
+
+    def get_num_owned_islands(self, player_id):
+        count = 0
+        for island in self.islands:
+            if island.own_player_id == player_id:
+                count += 1
+        return count
 
     def move_ship(self, ship: Ship, direction: str):
         # Update board

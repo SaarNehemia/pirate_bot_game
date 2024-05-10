@@ -12,3 +12,4 @@ class Island:
 
     def add_ship(self, ship):
         self.ships.append(ship)
+

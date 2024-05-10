@@ -24,7 +24,7 @@ class Game:
 
     def game_loop(self):
         running = True
-        game_end = False
+
         while running:
             for event in pg.event.get():
                 if event.type == KEYDOWN:
@@ -33,31 +33,82 @@ class Game:
                 elif event.type == pg.QUIT:
                     running = False
 
-            if game_end:
-                running = False
-                player_won = ""
-                print(f"{player_won} won!")
-
             # Update screen
             self.draw_all_sprites()
 
             # Play players turn
-            print(f'Starting turn {self.game_api.num_turn}:')
-            current_player_id = self.game_api.num_turn % len(self.game_api.players)
-            player = self.game_api.players[current_player_id]
-            print(f'{player.player_name} is now playing...')
-            player.player_do_turn_func(self.game_api)
-            self.update_islands_life()
-            print(f'Turn {self.game_api.num_turn} ended.')
+            self.play_player_turn()
+            self.print_game_status()
 
-            # TODO - Check for victory
+            # Check for victory
+            running = self.check_for_victory()
 
-            # print status and update turn
-            for player in self.game_api.players:
-                print(f"{player.player_name} has {len(player.ships)} ships left.")
+            # update turn
             self.game_api.num_turn += 1
 
         pg.quit()
+
+    def get_current_player(self):
+        current_player_id = self.game_api.num_turn % len(self.game_api.players)
+        return self.game_api.players[current_player_id]
+
+    def play_player_turn(self):
+        print(f'Turn {self.game_api.num_turn} starting:')
+        player = self.get_current_player()
+        print(f'{player.player_name} is now playing...')
+        player.player_do_turn_func(self.game_api)
+        self.update_islands_life()
+        print(f'Turn {self.game_api.num_turn} ended.')
+
+    def check_for_victory(self):
+        running = True
+        victory_criterion = self.game_api.victory_criterion
+        player = self.get_current_player()
+        num_owned_island = self.game_api.get_num_owned_islands(player.player_id)
+        if num_owned_island >= victory_criterion:
+            self.draw_all_sprites()
+            print(f"{player.player_name} won!")
+            running = False
+        return running
+
+    def print_game_status(self):
+        self.print_players_status()
+        self.print_islands_status()
+
+    def print_players_status(self):
+        print('Players status:')
+        for player in self.game_api.players:
+            num_owned_islands = self.game_api.get_num_owned_islands(player.player_id)
+            print(f"{player.player_name} has "
+                  f"{num_owned_islands} islands and "
+                  f"{len(player.ships)} ships.")
+            for island in self.game_api.islands:
+                if island.own_player_id == player.player_id:
+                    print(f'Island in {island.location} has '
+                          f'{island.current_life} HP and '
+                          f'{len(island.ships)} ships')
+        print('-------------------')
+
+    def print_islands_status(self):
+        print('Islands status:')
+        for island in self.game_api.islands:
+            # check if there are ships in island, if there is get player name
+            if island.ships:
+                island_ship_player_name = self.game_api.players[island.ships[0].player_id].player_name
+                island_ship_player_name = f' of {island_ship_player_name}'
+            else:
+                island_ship_player_name = ''
+
+            # check if island is conquered and print island status accordingly
+            if island.own_player_id == -1:
+                player_own_island = 'no one'
+            else:
+                player_own_island = self.game_api.players[island.own_player_id].player_name
+            print(f'Island in {island.location} '
+                  f'is owned by {player_own_island} and has '
+                  f'{island.current_life} HP and '
+                  f'{len(island.ships)} ships{island_ship_player_name}.')
+        print('-------------------')
 
     def init_board(self):
         # Init board with 'Sea' tiles
@@ -70,9 +121,9 @@ class Game:
         for block in self.game_api.blocks:
             self.game_api.board[block.location[0]][block.location[1]] = block
 
-            # Add islands
-            for island in self.game_api.islands:
-                self.game_api.board[island.location[0]][island.location[1]] = island
+        # Add islands
+        for island in self.game_api.islands:
+            self.game_api.board[island.location[0]][island.location[1]] = island
 
         # Update players
         for player in self.game_api.players:
@@ -87,10 +138,10 @@ class Game:
             player_base_island.own_player_id = player.player_id
             for ship_id in range(player_num_ships):
                 player_base_island.add_ship(Ship(ship_id=ship_id,
-                                                       player_id=player.player_id,
-                                                       ship_speed=player_ship_speed,
-                                                       location=player_base_island.location
-                                                       ))
+                                                 player_id=player.player_id,
+                                                 ship_speed=player_ship_speed,
+                                                 location=player_base_island.location
+                                                 ))
             # Update player ships
             player.ships = list(player_base_island.ships)
 
@@ -112,21 +163,20 @@ class Game:
 
     def update_islands_life(self):
         for island in self.game_api.islands:
-            for ship in island.ships:
-                # attack or defend island
-                last_life = island.current_life
-                island.current_life += 1 if ship.player_id == island.own_player_id else -1
+            if island.ships:
+                island_ships_player_id = island.ships[0].player_id
+                num_island_ships = len(island.ships)
+                if island.own_player_id == island_ships_player_id:
+                    island.current_life += num_island_ships
+                else:
+                    island.current_life -= num_island_ships
 
-                # Island neutralized
-                if island.current_life == 0:
-                    island.own_player_id = ship.player_id
-
-            # Update island color in case needed
-            if island.own_player_id == -1:
+            # Island conquered or neutralized
+            if island.current_life == 0:
+                island.own_player_id = -1
                 island.frontend_obj.change_to_neutral_color()
-            else:
+            if island.current_life < 0:
+                island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
+                island.current_life = -island.current_life
 
-            print(f'Island in {island.location} '
-                  f'is owned by {self.game_api.players[island.own_player_id].player_name} '
-                  f'with {island.current_life} HP')
