@@ -11,7 +11,7 @@ def do_turn(game_api: game_api.API):
     # TODO - change this to API function of patrol_radius(round_time=int(ship_speed)/radius)
     round_time = 300
     my_base_island_location = game_api.islands[game_api.players_base_islands_indices[
-        game_api.get_my_player_id(PLAYER_NAME)]].location
+        game_api.get_my_player_id()]].location
     if my_first_ship.location != my_base_island_location or game_api.num_turn == 1:
         if 0 <= game_api.num_turn % round_time < 0.25 * round_time:
             game_api.move_ship(ship=my_first_ship, direction='S')

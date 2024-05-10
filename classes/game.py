@@ -41,13 +41,16 @@ class Game:
             # Update screen
             self.draw_all_sprites()
 
-            # Play players turns
+            # Play players turn
             print(f'Starting turn {self.game_api.num_turn}:')
-            for player in self.game_api.players:
-                print(f'{player.player_name} is now playing...')
-                player.player_do_turn_func(self.game_api)
-                self.update_islands_life()
+            current_player_id = self.game_api.num_turn % len(self.game_api.players)
+            player = self.game_api.players[current_player_id]
+            print(f'{player.player_name} is now playing...')
+            player.player_do_turn_func(self.game_api)
+            self.update_islands_life()
             print(f'Turn {self.game_api.num_turn} ended.')
+
+            # TODO - Check for victory
 
             # print status and update turn
             for player in self.game_api.players:
