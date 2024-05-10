@@ -9,3 +9,9 @@ class Player:
         player_info = getattr(__import__(f'players.{self.player_name}'), self.player_name)
         self.player_do_turn_func = player_info.do_turn
         self.ships = []
+
+    def add_ship(self, ship):
+        self.ships.append(ship)
+
+    def remove_ship(self, ship):
+        self.ships.remove(ship)

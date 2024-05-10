@@ -56,10 +56,10 @@ class API():
 
     def move_ship(self, ship: Ship, direction: str):
         # Update board
-        self.update_tile_ship_left(ship)
+        self._update_tile_ship_left(ship)
         new_location = self.check_route(ship=ship, direction=direction)
         ship.update_location(new_location, self.board_size)
-        self.update_tile_ship_entered(ship)
+        self._update_tile_ship_entered(ship)
 
     def move_ship_towards_location(self, ship, location):
         horizontal_diff, vertical_diff = tuple(np.array(location) - np.array(ship.location))
@@ -113,15 +113,15 @@ class API():
                 return new_location
         return new_location
 
-    def update_tile_ship_left(self, ship):
+    def _update_tile_ship_left(self, ship):
         current_obj = self.board[ship.location[0]][ship.location[1]]
         if isinstance(current_obj, Ship):
             self.board[ship.location[0]][ship.location[1]] = 'Sea'
         elif isinstance(current_obj, Island):
             print(f'ship of {self.players[ship.player_id].player_name} left island in {current_obj.location}')
-            current_obj.ships.remove(ship)
+            current_obj.remove_ship(ship)
 
-    def update_tile_ship_entered(self, ship):
+    def _update_tile_ship_entered(self, ship):
         current_obj = self.board[ship.location[0]][ship.location[1]]
         if isinstance(current_obj, Island):
             island = current_obj
@@ -140,20 +140,24 @@ class API():
                       f'{self.players[enemy_ship.player_id].player_name}')
 
                 # kills your ship one enemy ship
-                enemy_ship.frontend_obj.kill()
-                self.players[enemy_ship.player_id].ships.remove(enemy_ship)  # enemy ship
-                island.ships.remove(enemy_ship)
+                self._ships_collide(enemy_ship, ship)
+                island.remove_ship(enemy_ship)
 
-                ship.frontend_obj.kill()
-                self.players[ship.player_id].ships.remove(ship)  # your ship
-        elif isinstance(current_obj, Ship):
+        elif isinstance(current_obj, Ship):  # ship collision
             other_ship = current_obj
-            other_ship.frontend_obj.kill()
-            self.players[other_ship.player_id].ships.remove(other_ship)  # other ship
-
-            ship.frontend_obj.kill()
-            self.players[ship.player_id].ships.remove(ship)  # your ship
-
+            self._ships_collide(other_ship, ship)
             self.board[ship.location[0]][ship.location[1]] = 'Sea'
-        else:
+        else:  # move ship freely
             self.board[ship.location[0]][ship.location[1]] = ship
+
+    def _ships_collide(self, ship1: Ship, ship2: Ship):
+        self._kill_ship(ship1)
+        self._kill_ship(ship2)
+
+    def _kill_ship(self, ship):
+        # Remove from backend
+        player = self.players[ship.player_id]
+        player.remove_ship(ship)
+
+        # Remove from frontend
+        ship.frontend_obj.kill()

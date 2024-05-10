@@ -13,3 +13,5 @@ class Island:
     def add_ship(self, ship):
         self.ships.append(ship)
 
+    def remove_ship(self, ship):
+        self.ships.remove(ship)
