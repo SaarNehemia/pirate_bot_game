@@ -15,3 +15,15 @@ class Player:
 
     def remove_ship(self, ship: Ship):
         self.ships.remove(ship)
+
+    def get_ship_obj(self, ship_id):
+        ship_ids = self.get_ships_ids()
+        ship_index = ship_ids.index(ship_id)
+        ship = self.ships[ship_index]
+        return ship
+
+    def get_ships_ids(self):
+        return [ship.ship_id for ship in self.ships]
+
+    def get_ships_locations(self):
+        return [ship.location for ship in self.ships]

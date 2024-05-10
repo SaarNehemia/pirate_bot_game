@@ -9,16 +9,6 @@ from classes.player import Player
 from classes.ship import Ship
 
 
-def extract_board_params(board_params):
-    return board_params['board_size'], \
-        board_params['blocks'], \
-        board_params['islands'], \
-        board_params['players_base_islands_indices'], \
-        board_params['players_ship_speed'], \
-        board_params['players_num_ships'], \
-        board_params['victory_criterion']
-
-
 class API():
     def __init__(self, board_params, player_names):
         # init players
@@ -28,11 +18,12 @@ class API():
         for player_id, player_name in enumerate(player_names):
             self.players.append(Player(player_id, player_name))
 
-        # Init board
-        self.board_size, self.blocks, self.islands, self.players_base_islands_indices, \
-            self.players_ship_speed, self.players_num_ships, self.victory_criterion = \
-            extract_board_params(board_params)
+        # Init board and extract all board params to attributes
         self.board = []  # Backend
+        for key, value in board_params.items():
+            setattr(self, key, value)
+        # This creates: self.board_size, self.blocks, self.islands, self.players_base_islands_indices, \
+        #               self.players_ship_speed, self.players_num_ships, self.victory_criterion \
 
         # Init
         self.num_turn = 0
@@ -41,27 +32,91 @@ class API():
                                'W': (-1, 0),
                                'E': (1, 0)}
 
-    def get_my_player_obj(self):
-        return self.players[self.get_my_player_id()]
-
     def get_my_player_id(self):
         return self.num_turn % len(self.players)
 
-    def get_num_owned_islands(self, player_id):
-        count = 0
-        for island in self.islands:
-            if island.own_player_id == player_id:
-                count += 1
-        return count
+    def get_enemy_player_id(self):
+        return int(not self.get_my_player_id())
 
-    def move_ship(self, ship: Ship, direction: str):
-        # Update board
+    def get_num_players(self):
+        return len(self.players)
+
+    def get_blocks_locations(self):
+        blocks_locations = []
+        for block in self.blocks:
+            blocks_locations.append(block.location)
+        return blocks_locations
+
+    def get_islands_locations(self):
+        islands_locations = []
+        for island in self.islands:
+            islands_locations.append(island.location)
+        return islands_locations
+
+    def get_player_owned_islands_indices(self, player_id):
+        player_owned_island_indices = []
+        for island_id, island in enumerate(self.islands):
+            if island.own_player_id == player_id:
+                player_owned_island_indices.append(island_id)
+        return player_owned_island_indices
+
+    def get_player_owned_islands_locations(self, player_id):
+        player_owned_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
+                                                                          indices_list=
+                                                                          self.get_player_owned_islands_indices(
+                                                                              player_id),
+                                                                          return_in_indices_list=True)
+        return [island.location for island in player_owned_islands]
+
+    def get_num_player_owned_islands(self, player_id):
+        return len(self.get_player_owned_islands_indices(player_id))
+
+    def get_neutral_islands_indices(self):
+        all_owned_island_indices = []
+        for player_id, _ in self.players:
+            player_owned_island_indices = self.get_player_owned_islands_indices(player_id)
+            all_owned_island_indices.extend(player_owned_island_indices)
+        neutral_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
+                                                                     indices_list=all_owned_island_indices,
+                                                                     return_in_indices_list=False)
+        return [neutral_island_index for neutral_island_index, _ in enumerate(neutral_islands)]
+
+    def get_neutral_islands_locations(self):
+        neutral_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
+                                                                     indices_list=self.get_neutral_islands_indices(),
+                                                                     return_in_indices_list=True)
+        return [island.location for island in neutral_islands]
+
+    def get_player_ships_ids(self, player_id):
+        return self.players[player_id].get_ships_ids()
+
+    def get_player_ships_locations(self, player_id):
+        return self.players[player_id].get_ships_locations()
+
+    def get_player_num_ships(self, player_id):
+        return len(self.players[player_id].ships)
+
+    def get_player_ship_location_from_id(self, player_id, ship_id):
+        player_ships_locations = self.get_player_ships_locations(player_id)
+        ship_index = self.get_player_ships_ids(player_id).index(ship_id)
+        return player_ships_locations[ship_index]
+
+    def move_ship(self, ship_id: int, direction: str):
+        current_player_obj = self.players[self.get_my_player_id()]
+        ship = current_player_obj.get_ship_obj(ship_id)
+        player_id = self.get_my_player_id()
         self._update_tile_ship_left(ship)
-        new_location = self.check_route(ship=ship, direction=direction)
+        new_location, collision_info = self.check_ship_route(player_id=player_id,
+                                                             ship_id=ship_id,
+                                                             direction=direction)
         ship.update_location(new_location, self.board_size)
+        if collision_info == 'islands':
+            ship.frontend_obj.kill()
         self._update_tile_ship_entered(ship)
 
-    def move_ship_towards_location(self, ship, location):
+    def move_ship_towards_location(self, ship_id, location):
+        current_player_obj = self.players[self.get_my_player_id()]
+        ship = current_player_obj.get_ship_obj(ship_id)
         horizontal_diff, vertical_diff = tuple(np.array(location) - np.array(ship.location))
 
         # ship in location
@@ -70,48 +125,50 @@ class API():
 
         # ship only need to move horizontally
         if horizontal_diff != 0 and vertical_diff == 0:
-            self.move_horizontally(ship, horizontal_diff)
+            self._move_horizontally(ship_id, horizontal_diff)
 
         if horizontal_diff == 0 and vertical_diff != 0:
-            self.move_vertically(ship, vertical_diff)
+            self._move_vertically(ship_id, vertical_diff)
 
         if horizontal_diff != 0 and vertical_diff != 0:
             if random.randint(0, 1) == 0:
-                self.move_horizontally(ship, horizontal_diff)
+                self._move_horizontally(ship_id, horizontal_diff)
             else:
-                self.move_vertically(ship, vertical_diff)
+                self._move_vertically(ship_id, vertical_diff)
 
-    def move_vertically(self, ship, vertical_diff):
-        if vertical_diff > 0:
-            self.move_ship(ship, direction='S')
-        else:
-            self.move_ship(ship, direction='N')
-
-    def move_horizontally(self, ship, horizontal_diff):
-        if horizontal_diff > 0:
-            self.move_ship(ship, direction='E')
-        else:
-            self.move_ship(ship, direction='W')
-
-    def check_route(self, ship, direction):
+    def check_ship_route(self, player_id, ship_id, direction):
+        ship = self.players[player_id].get_ship_obj(ship_id)
         current_location = ship.location
+        collision_info = ""
         for step in range(ship.ship_speed + 1):
             if step == 0: continue
-            new_location = np.array(current_location) + \
-                           step * np.array(self.direction_dict[direction])
+            new_location = tuple(np.array(current_location) + \
+                                 step * np.array(self.direction_dict[direction]))
             new_location = utils.verify_location(new_location, self.board_size)
             current_obj = self.board[new_location[0]][new_location[1]]
             if isinstance(current_obj, Block):
                 print(f'ship encountered block in {new_location}')
-                new_location = np.array(current_location) + \
-                               (step - 1) * np.array(self.direction_dict[direction])
-                return new_location
+                collision_info = 'blocks', new_location, current_obj.block_id
+                new_location = tuple(np.array(current_location) + \
+                                     (step - 1) * np.array(self.direction_dict[direction]))
+                return new_location, collision_info
             elif isinstance(current_obj, Island):
+                collision_info = 'islands', new_location, current_obj.island_id
                 print(f'ship encountered island in {new_location}')
-                ship.location = new_location  # TODO return here
-                ship.frontend_obj.kill()
-                return new_location
-        return new_location
+                return new_location, collision_info
+            return new_location, collision_info
+
+    def _move_vertically(self, ship_id: int, vertical_diff):
+        if vertical_diff > 0:
+            self.move_ship(ship_id, direction='S')
+        else:
+            self.move_ship(ship_id, direction='N')
+
+    def _move_horizontally(self, ship_id: int, horizontal_diff):
+        if horizontal_diff > 0:
+            self.move_ship(ship_id, direction='E')
+        else:
+            self.move_ship(ship_id, direction='W')
 
     def _update_tile_ship_left(self, ship):
         current_obj = self.board[ship.location[0]][ship.location[1]]

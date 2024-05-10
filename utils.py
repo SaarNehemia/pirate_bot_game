@@ -24,6 +24,22 @@ SCREEN_HEIGHT = 600
 
 # [self.board[i][j] for i in range(self.board_size) for j in range(self.board_size) if not isinstance(self.board[i][j], str)]
 
+def split_list_according_to_indices_list(my_list: list, indices_list: list,
+                                         return_in_indices_list: bool):
+    """
+    l1 is a list of all elements in my_list whose indices aren't in indices_list.
+    l1 is a list of all elements in my_list whose indices are in indices_list.
+    """
+    indices = set(indices_list)  # convert to set for fast lookups
+    l1, l2 = [], []
+    l_append = (l1.append, l2.append)
+    for idx, element in enumerate(my_list):
+        l_append[idx in indices](element)
+    if return_in_indices_list:
+        return l2
+    else:
+        return l1
+
 def verify_location(location: tuple, board_size: int):
     # Keep location on the board
     location = np.array(location)

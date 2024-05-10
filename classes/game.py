@@ -67,20 +67,22 @@ class Game:
         running = True
         victory_criterion = self.game_api.victory_criterion
         for player in self.game_api.players:
-            num_owned_island = self.game_api.get_num_owned_islands(player.player_id)
+            num_owned_island = self.game_api.get_num_player_owned_islands(player.player_id)
             if num_owned_island >= victory_criterion:
                 print(f"{player.player_name} won!")
                 running = False
         return running
 
     def print_game_status(self):
+        print('~~~~~ Game Status ~~~~~')
         self.print_players_status()
         self.print_islands_status()
+        print('~~~~~~~~~~~~~~~~~~~~~~~')
 
     def print_players_status(self):
-        print('Players status:')
+        print('*** Players status: ***')
         for player in self.game_api.players:
-            num_owned_islands = self.game_api.get_num_owned_islands(player.player_id)
+            num_owned_islands = self.game_api.get_num_player_owned_islands(player.player_id)
             print(f"{player.player_name} has "
                   f"{num_owned_islands} islands and "
                   f"{len(player.ships)} ships.")
@@ -96,7 +98,7 @@ class Game:
         print('-------------------')
 
     def print_islands_status(self):
-        print('Islands status:')
+        print('*** Islands status: ***')
         for island in self.game_api.islands:
             # check if there are ships in island, if there is get player name
             if island.ships:
@@ -124,11 +126,13 @@ class Game:
                 self.game_api.board[i].append('Sea')
 
         # Add blocks
-        for block in self.game_api.blocks:
+        for block_id, block in enumerate(self.game_api.blocks):
+            block.assign_id(block_id)
             self.game_api.board[block.location[0]][block.location[1]] = block
 
         # Add islands
-        for island in self.game_api.islands:
+        for island_id, island in enumerate(self.game_api.islands):
+            island.assign_id(island_id)
             self.game_api.board[island.location[0]][island.location[1]] = island
 
         # Update players
