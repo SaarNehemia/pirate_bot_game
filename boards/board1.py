@@ -21,5 +21,5 @@ board_params = {'board_size': 500,
                 'players_base_islands_indices': [0, 1],
                 'players_ship_speed': [5, 1],
                 'players_num_ships': [1, 1],
-                'victory_criterion': 2,  # num islands which has to be conquered to win the game.
+                'victory_criterion': 2,  # num islands which has to be captured to win the game.
                 }

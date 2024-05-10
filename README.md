@@ -1,2 +1,2 @@
 # pirate_game
-pirate game like Skillz: develop a bot to conquer islands and defeat other team
+pirate game like Skillz: develop a bot to capture islands and defeat other team

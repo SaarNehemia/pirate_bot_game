@@ -83,12 +83,12 @@ class FrontEndObj(pg.sprite.Sprite):
         return frontend_location
 
     def change_to_player_color(self, player_id):
-        """ Change to player color once conquered by a player"""
+        """ Change to player color once captured by a player"""
         player_color = COLORS_DICT['Player'][player_id]
         self.surf.fill(player_color)
 
     def change_to_neutral_color(self):
-        """ Change to player color once conquered by a player"""
+        """ Change to player color once captured by a player"""
         player_color = COLORS_DICT['Island']
         self.surf.fill(player_color)
 

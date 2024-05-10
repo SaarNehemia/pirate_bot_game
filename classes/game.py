@@ -101,7 +101,7 @@ class Game:
             else:
                 island_ship_player_name = ''
 
-            # check if island is conquered and print island status accordingly
+            # check if island is captured and print island status accordingly
             if island.own_player_id == -1:
                 player_own_island = 'no one'
             else:
@@ -173,7 +173,7 @@ class Game:
                 else:
                     island.current_life -= num_island_ships
 
-            # Island conquered or neutralized
+            # Island captured or neutralized
             if island.current_life == 0:
                 island.own_player_id = -1
                 island.frontend_obj.change_to_neutral_color()
