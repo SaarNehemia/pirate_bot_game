@@ -22,6 +22,8 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 
+# [self.board[i][j] for i in range(self.board_size) for j in range(self.board_size) if not isinstance(self.board[i][j], str)]
+
 def verify_location(location: tuple, board_size: int):
     # Keep location on the board
     location = np.array(location)
@@ -54,15 +56,6 @@ class FrontEndObj(pg.sprite.Sprite):
         self.rect = self.surf.get_rect(center=frontend_location)
         screen.blit(self.surf, self.rect)
 
-    # def update(self, num_steps, step, board_size, screen):
-    #     # move sprite
-    #     for _ in range(num_steps):
-    #         frontend_step = self.get_frontend_location(step, board_size)
-    #         self.rect.move_ip(frontend_step)
-    #         self.verify_frontend_location()
-    #         screen.blit(self.surf, self.rect)
-    #         pg.display.flip()
-
     def verify_frontend_location(self):
         # Keep sprite on the screen
         if self.rect.left < 0:
@@ -91,13 +84,3 @@ class FrontEndObj(pg.sprite.Sprite):
         """ Change to player color once captured by a player"""
         player_color = COLORS_DICT['Island']
         self.surf.fill(player_color)
-
-
-def change_to_specific_color(self, color_name):
-    """ Change to specific color"""
-    self.surf.fill(COLORS_DICT[color_name])
-
-
-def change_to_default_color(self):
-    """ Change back to specific color"""
-    self.surf.fill(COLORS_DICT[self.name])

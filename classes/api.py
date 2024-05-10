@@ -140,8 +140,20 @@ class API():
                       f'{self.players[enemy_ship.player_id].player_name}')
 
                 # kills your ship one enemy ship
-                island.ships.remove(enemy_ship)
+                enemy_ship.frontend_obj.kill()
                 self.players[enemy_ship.player_id].ships.remove(enemy_ship)  # enemy ship
+                island.ships.remove(enemy_ship)
+
+                ship.frontend_obj.kill()
                 self.players[ship.player_id].ships.remove(ship)  # your ship
+        elif isinstance(current_obj, Ship):
+            other_ship = current_obj
+            other_ship.frontend_obj.kill()
+            self.players[other_ship.player_id].ships.remove(other_ship)  # other ship
+
+            ship.frontend_obj.kill()
+            self.players[ship.player_id].ships.remove(ship)  # your ship
+
+            self.board[ship.location[0]][ship.location[1]] = 'Sea'
         else:
             self.board[ship.location[0]][ship.location[1]] = ship

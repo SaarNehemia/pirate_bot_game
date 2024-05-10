@@ -84,6 +84,10 @@ class Game:
             print(f"{player.player_name} has "
                   f"{num_owned_islands} islands and "
                   f"{len(player.ships)} ships.")
+
+            for ship in player.ships:
+                print(f'Ship in {ship.location}')
+
             for island in self.game_api.islands:
                 if island.own_player_id == player.player_id:
                     print(f'Island in {island.location} has '
