@@ -1,4 +1,5 @@
 import utils
+from classes.ship import Ship
 
 
 class Island:
@@ -10,8 +11,8 @@ class Island:
         self.ship_creation_time = ship_creation_time
         self.frontend_obj: utils.FrontEndObj = utils.FrontEndObj(name='Island', location=location)
 
-    def add_ship(self, ship):
+    def add_ship(self, ship: Ship):
         self.ships.append(ship)
 
-    def remove_ship(self, ship):
+    def remove_ship(self, ship: Ship):
         self.ships.remove(ship)

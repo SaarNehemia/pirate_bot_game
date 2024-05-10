@@ -15,7 +15,7 @@ def extract_board_params(board_params):
         board_params['islands'], \
         board_params['players_base_islands_indices'], \
         board_params['players_ship_speed'], \
-        board_params['players_num_ships'],\
+        board_params['players_num_ships'], \
         board_params['victory_criterion']
 
 
@@ -108,7 +108,7 @@ class API():
                 return new_location
             elif isinstance(current_obj, Island):
                 print(f'ship encountered island in {new_location}')
-                ship.location = new_location
+                ship.location = new_location  # TODO return here
                 ship.frontend_obj.kill()
                 return new_location
         return new_location
@@ -140,12 +140,12 @@ class API():
                       f'{self.players[enemy_ship.player_id].player_name}')
 
                 # kills your ship one enemy ship
-                self._ships_collide(enemy_ship, ship)
                 island.remove_ship(enemy_ship)
+                self._ships_collide(enemy_ship, ship)
 
         elif isinstance(current_obj, Ship):  # ship collision
             other_ship = current_obj
-            self._ships_collide(other_ship, ship)
+            self._ships_collide(ship, other_ship)
             self.board[ship.location[0]][ship.location[1]] = 'Sea'
         else:  # move ship freely
             self.board[ship.location[0]][ship.location[1]] = ship
@@ -154,7 +154,7 @@ class API():
         self._kill_ship(ship1)
         self._kill_ship(ship2)
 
-    def _kill_ship(self, ship):
+    def _kill_ship(self, ship: Ship):
         # Remove from backend
         player = self.players[ship.player_id]
         player.remove_ship(ship)

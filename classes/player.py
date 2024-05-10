@@ -10,8 +10,8 @@ class Player:
         self.player_do_turn_func = player_info.do_turn
         self.ships = []
 
-    def add_ship(self, ship):
+    def add_ship(self, ship: Ship):
         self.ships.append(ship)
 
-    def remove_ship(self, ship):
+    def remove_ship(self, ship: Ship):
         self.ships.remove(ship)
