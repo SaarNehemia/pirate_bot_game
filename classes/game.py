@@ -35,12 +35,20 @@ class Game:
                     running = False
 
             # Play players turn
-            self.play_player_turn()
-            self.draw_all_sprites()  # Update screen
-            self.print_game_status()
-
-            # Check for victory
-            running = self.check_for_victory()
+            current_player = self.get_current_player()
+            try:
+                print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
+                self.play_player_turn(current_player)
+                print(f'Turn {self.game_api.num_turn} ended.')
+                self.draw_all_sprites()
+                self.print_game_status()
+                running = self.check_for_victory()
+            except:
+                print(f'{current_player.player_name} code crashed :(')
+                print(f'Turn {self.game_api.num_turn} ended.')
+                other_player = self.game_api.players[~current_player.player_id]
+                print(f"{other_player.player_name} won!")
+                running = False
 
             # update turn
             self.game_api.num_turn += 1
@@ -51,13 +59,9 @@ class Game:
         current_player_id = self.game_api.num_turn % len(self.game_api.players)
         return self.game_api.players[current_player_id]
 
-    def play_player_turn(self):
-        print(f'Turn {self.game_api.num_turn} starting:')
-        player = self.get_current_player()
-        print(f'{player.player_name} is now playing...')
+    def play_player_turn(self, player):
         player.player_do_turn_func(self.game_api)
         self.update_islands_life()
-        print(f'Turn {self.game_api.num_turn} ended.')
 
     def check_for_victory(self):
         running = True
