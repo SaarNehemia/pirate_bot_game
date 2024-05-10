@@ -20,6 +20,7 @@ class Game:
 
         # Start game
         self.init_board()
+        self.draw_all_sprites()  # Update screen
         self.game_loop()
 
     def game_loop(self):
@@ -33,11 +34,9 @@ class Game:
                 elif event.type == pg.QUIT:
                     running = False
 
-            # Update screen
-            self.draw_all_sprites()
-
             # Play players turn
             self.play_player_turn()
+            self.draw_all_sprites()  # Update screen
             self.print_game_status()
 
             # Check for victory
@@ -63,12 +62,11 @@ class Game:
     def check_for_victory(self):
         running = True
         victory_criterion = self.game_api.victory_criterion
-        player = self.get_current_player()
-        num_owned_island = self.game_api.get_num_owned_islands(player.player_id)
-        if num_owned_island >= victory_criterion:
-            self.draw_all_sprites()
-            print(f"{player.player_name} won!")
-            running = False
+        for player in self.game_api.players:
+            num_owned_island = self.game_api.get_num_owned_islands(player.player_id)
+            if num_owned_island >= victory_criterion:
+                print(f"{player.player_name} won!")
+                running = False
         return running
 
     def print_game_status(self):
