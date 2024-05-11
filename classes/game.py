@@ -7,7 +7,7 @@ from classes.ship import Ship
 
 
 class Game:
-    def __init__(self, board_params: dict, player_names: list[str]):
+    def __init__(self, board_params: dict, player_names: list[str], time_out: int):
 
         # init API
         self.game_api = API(board_params=board_params,
@@ -17,11 +17,16 @@ class Game:
         pg.init()
         self.all_sprites = pg.sprite.Group()
         self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
+        self.player_name_won = ""
+        self.time_out = time_out
 
-        # Start game
+        # Init game board and screen
         self.init_board()
         self.draw_all_sprites()  # Update screen
+
+    def __call__(self, *args, **kwargs):
         self.game_loop()
+        return self.player_name_won
 
     def game_loop(self):
         running = True
@@ -47,11 +52,16 @@ class Game:
                 print(f'{current_player.player_name} code crashed :(')
                 print(f'Turn {self.game_api.num_turn} ended.')
                 other_player = self.game_api.players[~current_player.player_id]
-                print(f"{other_player.player_name} won!")
+                self.player_name_won = other_player.player_name
+                print(f"{self.player_name_won} won!")
                 running = False
 
-            # update turn
-            self.game_api.num_turn += 1
+            # check if time out reached, if not update num turn
+            if self.game_api.num_turn >= self.time_out:
+                self.player_name_won = "draw"
+                running = False
+            else:
+                self.game_api.num_turn += 1
 
         pg.quit()
 
@@ -69,7 +79,8 @@ class Game:
         for player in self.game_api.players:
             num_owned_island = self.game_api.get_num_player_owned_islands(player.player_id)
             if num_owned_island >= victory_criterion:
-                print(f"{player.player_name} won!")
+                self.player_name_won = player.player_name
+                print(f"{self.player_name_won} won!")
                 running = False
         return running
 
@@ -189,4 +200,3 @@ class Game:
                 island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
                 island.current_life = -island.current_life
-
