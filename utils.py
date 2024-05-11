@@ -29,6 +29,7 @@ def split_list_according_to_indices_list(my_list: list, indices_list: list,
     """
     l1 is a list of all elements in my_list whose indices aren't in indices_list.
     l1 is a list of all elements in my_list whose indices are in indices_list.
+    based on: https://stackoverflow.com/questions/45649106/get-list-elements-that-are-not-in-index-list
     """
     indices = set(indices_list)  # convert to set for fast lookups
     l1, l2 = [], []
@@ -39,6 +40,7 @@ def split_list_according_to_indices_list(my_list: list, indices_list: list,
         return l2
     else:
         return l1
+
 
 def verify_location(location: tuple, board_size: int):
     # Keep location on the board
