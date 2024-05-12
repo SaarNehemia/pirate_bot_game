@@ -7,7 +7,7 @@ if __name__ == '__main__':
     board_name: str = 'board1'
     num_games: int = 2
     time_out: int = 1000
-    to_draw_game: bool = False
+    to_draw_game: bool = True
 
     # Init game results count
     wins_count = dict((player_name, 0) for player_name in player_names)

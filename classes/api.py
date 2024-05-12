@@ -39,10 +39,16 @@ class API():
                                'E': (1, 0)}
 
     # ------------------------------- GET API ATTRIBUTES METHODS ----------------------------------- #
-    def get_num_turn(self):
+    def get_num_turn(self) -> int:
+        """
+        :return: current turn number.
+        """
         return self.num_turn
 
-    def get_time_out(self):
+    def get_time_out(self) -> int:
+        """
+        :return: maximal num turns until game ends.
+        """
         return self.time_out
 
     def get_board_size(self) -> int:
@@ -62,7 +68,6 @@ class API():
 
     def get_player_ship_speed(self, player_id: int) -> int:
         """
-
         :param player_id:
         :return: given player ship speed (in board size units).
         """
@@ -86,20 +91,35 @@ class API():
 
     # --------------------------------- PLAYERS METHODS ------------------------------------------- #
     def get_my_player_id(self) -> int:
+        """
+        :return: your player id to use in other functions.
+        """
         return self.num_turn % len(self.players)
 
     def get_enemy_player_id(self) -> int:
+        """
+        :return: enemy player id to use in other functions.
+        """
         return int(not self.get_my_player_id())
 
     def get_num_players(self) -> int:
+        """
+        :return: number of players in the game.
+        """
         return len(self.players)
 
     # --------------------------------- BLOCKS METHODS ------------------------------------------- #
 
-    def get_num_blocks(self):
+    def get_num_blocks(self) -> int:
+        """
+        :return: number of blocks in the current board.
+        """
         return len(self.blocks)
 
     def get_blocks_locations(self) -> list[tuple]:
+        """
+        :return: all blocks location in the current board.
+        """
         blocks_locations = []
         for block in self.blocks:
             blocks_locations.append(block.location)
@@ -108,15 +128,25 @@ class API():
     # --------------------------------- ISLANDS METHODS ------------------------------------------- #
 
     def get_num_islands(self) -> int:
+        """
+        :return: number of islands in the current board.
+        """
         return len(self.islands)
 
     def get_islands_locations(self) -> list[tuple]:
+        """
+        :return: all islands locations in the current board.
+        """
         islands_locations = []
         for island in self.islands:
             islands_locations.append(island.location)
         return islands_locations
 
     def get_player_owned_islands_indices(self, player_id: int) -> list[int]:
+        """
+        :param player_id:
+        :return: all islands indices that the given player owns.
+        """
         player_owned_island_indices = []
         for island_id, island in enumerate(self.islands):
             if island.own_player_id == player_id:
@@ -124,6 +154,10 @@ class API():
         return player_owned_island_indices
 
     def get_player_owned_islands_locations(self, player_id: int) -> list[tuple]:
+        """
+        :param player_id:
+        :return: all islands locations that the given player owns.
+        """
         player_owned_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
                                                                           indices_list=
                                                                           self.get_player_owned_islands_indices(
@@ -132,9 +166,16 @@ class API():
         return [island.location for island in player_owned_islands]
 
     def get_num_player_owned_islands(self, player_id: int) -> int:
+        """
+        :param player_id:
+        :return: number of islands that the given player owns.
+        """
         return len(self.get_player_owned_islands_indices(player_id))
 
     def get_neutral_islands_indices(self) -> list[int]:
+        """
+        :return: all neutral islands indices.
+        """
         all_owned_island_indices = []
         for player_id, _ in self.players:
             player_owned_island_indices = self.get_player_owned_islands_indices(player_id)
@@ -145,6 +186,9 @@ class API():
         return [neutral_island_index for neutral_island_index, _ in enumerate(neutral_islands)]
 
     def get_neutral_islands_locations(self) -> list[tuple]:
+        """
+        :return: all neutral islands locations.
+        """
         neutral_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
                                                                      indices_list=self.get_neutral_islands_indices(),
                                                                      return_in_indices_list=True)
@@ -153,20 +197,43 @@ class API():
     # --------------------------------- SHIPS METHODS ------------------------------------------- #
 
     def get_player_num_ships(self, player_id: int) -> int:
+        """
+        :param player_id:
+        :return: current number of ships of given player.
+        """
         return len(self.players[player_id].ships)
 
     def get_player_ships_ids(self, player_id: int) -> list[int]:
+        """
+        :param player_id:
+        :return: current ships ids of given player.
+        """
         return self.players[player_id].get_ships_ids()
 
     def get_player_ships_locations(self, player_id: int) -> list[tuple]:
+        """
+        :param player_id:
+        :return: current ships locations of given player.
+        """
         return self.players[player_id].get_ships_locations()
 
     def get_player_ship_location_from_id(self, player_id: int, ship_id: int) -> tuple:
+        """
+        :param player_id:
+        :param ship_id:
+        :return: ship location from ship id of given player.
+        """
         player_ships_locations = self.get_player_ships_locations(player_id)
         ship_index = self.get_player_ships_ids(player_id).index(ship_id)
         return player_ships_locations[ship_index]
 
-    def move_ship(self, ship_id: int, direction: str):
+    def move_ship(self, ship_id: int, direction: str) -> None:
+        """
+         This function moves given ship in given direction on board with ship's speed.
+         If off-bounds, stay in place.
+        :param ship_id:
+        :param direction: options: 'N' (north, up), 'E' (east, right), 'W' (west, left), 'S' (south, down)
+        """
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
         player_id = self.get_my_player_id()
@@ -179,7 +246,15 @@ class API():
             ship.frontend_obj.kill()
         self._update_tile_ship_entered(ship)
 
-    def move_ship_towards_location(self, ship_id, location):
+    def move_ship_towards_location(self, ship_id, location) -> None:
+        """
+        This function moves given ship towards given location on board.
+        if location is diagonal, choose randomly between horizontal or vertical direction.
+        Then, move ship in that direction with ship's speed.
+        If off-bounds, stay in place.
+        :param ship_id:
+        :param location:
+        """
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
         horizontal_diff, vertical_diff = tuple(np.array(location) - np.array(ship.location))
@@ -203,9 +278,23 @@ class API():
 
     def check_ship_route(self, player_id: int, ship_id: int, direction: str) \
             -> tuple[tuple, tuple[str, tuple, int]]:
+        """
+        This function checks if given ship's route of given player in given direction is clean
+        taking into account ship's speed. If clean, returns new location.
+        If blocked, return last available location (one step before block or location of island/colliding ship).
+        :param player_id:
+        :param ship_id:
+        :param direction: options: 'N' (north, up), 'E' (east, right), 'W' (west, left), 'S' (south, down)
+        :return: new_location: last available location given ship's speed and current location,
+                               taking into account islands and blocks on the way.
+                 collision_info: None if no collision, tuple containing 3 or 4 parameters if there is a collision:
+                 type of collision (blocks/islands/ships),
+                 last available location (one step before block or location of island/colliding ship)
+                 and collided object id/ids (block id or island id or ship & player id)
+        """
         ship = self.players[player_id].get_ship_obj(ship_id)
         current_location = ship.location
-        collision_info = ""
+        collision_info = None
         for step in range(ship.ship_speed + 1):
             if step == 0: continue
             new_location = tuple(np.array(current_location) + \
@@ -221,6 +310,9 @@ class API():
             elif isinstance(current_obj, Island):
                 collision_info = 'islands', new_location, current_obj.island_id
                 print(f'ship encountered island in {new_location}')
+                return new_location, collision_info
+            elif isinstance(current_obj, Ship):
+                collision_info = 'ships', new_location, current_obj.player_id, current_obj.ship_id
                 return new_location, collision_info
             return new_location, collision_info
 
