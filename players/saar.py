@@ -2,7 +2,7 @@ import classes.api as game_api
 
 
 def do_turn(game_api: game_api.API):
-    strategy = 2
+    strategy = 1
     my_player_id = game_api.get_my_player_id()
     enemy_player_id = game_api.get_enemy_player_id()
 

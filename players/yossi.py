@@ -2,7 +2,7 @@ import classes.api as game_api
 
 
 def do_turn(game_api: game_api.API):
-    strategy = 3
+    strategy = 1
     my_player_id = game_api.get_my_player_id()
     enemy_player_id = game_api.get_enemy_player_id()
 
@@ -20,6 +20,7 @@ def do_turn(game_api: game_api.API):
             first_enemy_ship_id = enemy_ships_ids[0]
         except IndexError:
             print('No ships for enemy :)')
+            return
 
         enemy_ship_location = game_api.get_player_ship_location_from_id(player_id=enemy_player_id,
                                                                         ship_id=first_enemy_ship_id)
