@@ -10,7 +10,7 @@ from classes.ship import Ship
 
 
 class API():
-    def __init__(self, board_params, player_names):
+    def __init__(self, board_settings: dict, player_names: list[str], time_out: int):
         # init players in random order
         self.player_names = player_names
         random.shuffle(self.player_names)
@@ -20,19 +20,31 @@ class API():
 
         # Init board and extract all board params to attributes
         self.board = []  # Backend
-        for key, value in board_params.items():
+        for key, value in board_settings.items():
             setattr(self, key, value)
-        # This creates: self.board_size, self.blocks, self.islands, self.players_base_islands_indices, \
-        #               self.players_ship_speed, self.players_num_ships, self.victory_criterion \
+        # self.board_size = board_settings['board_size']
+        # self.blocks = board_settings['blocks']
+        # self.islands = board_settings['islands']
+        # self.players_base_islands_indices = board_settings['players_base_islands_indices']
+        # self.players_ship_speed = board_settings['players_ship_speed']
+        # self.players_num_ships = board_settings['players_num_ships']
+        # self.victory_criterion = board_settings['victory_criterion']
 
         # Init all other attributes
         self.num_turn = 0
+        self.time_out = time_out
         self.direction_dict = {'N': (0, -1),
                                'S': (0, 1),
                                'W': (-1, 0),
                                'E': (1, 0)}
 
     # ------------------------------- GET API ATTRIBUTES METHODS ----------------------------------- #
+    def get_num_turn(self):
+        return self.num_turn
+
+    def get_time_out(self):
+        return self.time_out
+
     def get_board_size(self) -> int:
         """
         :return: board side length (board is a board_size X board_size matrix)
@@ -189,7 +201,7 @@ class API():
             else:
                 self._move_vertically(ship_id, vertical_diff)
 
-    def check_ship_route(self, player_id: int, ship_id: int, direction: str)\
+    def check_ship_route(self, player_id: int, ship_id: int, direction: str) \
             -> tuple[tuple, tuple[str, tuple, int]]:
         ship = self.players[player_id].get_ship_obj(ship_id)
         current_location = ship.location

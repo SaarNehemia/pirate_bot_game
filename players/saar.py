@@ -69,22 +69,22 @@ def do_turn(game_api: game_api.API):
             return
 
         # ship rounds island only if it is not in base island
-        if game_api.num_turn < game_api.get_num_players() or my_first_ship_location != my_first_island_location:
+        if game_api.get_num_turn() < game_api.get_num_players() or my_first_ship_location != my_first_island_location:
             ship_go_round(game_api=game_api, ship_id=my_first_ship_id, round_time=round_time)
             return
 
         # ship leaves island if rest time passed
-        if game_api.num_turn % (round_time + rest_time) == 0:
+        if game_api.get_num_turn() % (round_time + rest_time) == 0:
             ship_go_round(game_api=game_api, ship_id=my_first_ship_id, round_time=round_time)
             return
 
 
 def ship_go_round(game_api: game_api.API, ship_id: int, round_time: int):
-    if 0 <= game_api.num_turn % round_time < 0.25 * round_time:
+    if 0 <= game_api.get_num_turn() % round_time < 0.25 * round_time:
         game_api.move_ship(ship_id=ship_id, direction='S')
-    elif 0.25 * round_time <= game_api.num_turn % round_time < 0.5 * round_time:
+    elif 0.25 * round_time <= game_api.get_num_turn() % round_time < 0.5 * round_time:
         game_api.move_ship(ship_id=ship_id, direction='W')
-    elif 0.5 * round_time <= game_api.num_turn % round_time < 0.75 * round_time:
+    elif 0.5 * round_time <= game_api.get_num_turn() % round_time < 0.75 * round_time:
         game_api.move_ship(ship_id=ship_id, direction='N')
-    elif 0.75 * round_time <= game_api.num_turn % round_time < round_time:
+    elif 0.75 * round_time <= game_api.get_num_turn() % round_time < round_time:
         game_api.move_ship(ship_id=ship_id, direction='E')

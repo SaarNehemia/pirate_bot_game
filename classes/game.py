@@ -7,22 +7,22 @@ from classes.ship import Ship
 
 
 class Game:
-    def __init__(self, board_params: dict, player_names: list[str], time_out: int):
+    def __init__(self, game_api: API, to_draw_game: bool):
+        # Init API
+        self.game_api = game_api
 
-        # init API
-        self.game_api = API(board_params=board_params,
-                            player_names=player_names)
-
-        # Init screen (frontend) and board (backend)
-        pg.init()
-        self.all_sprites = pg.sprite.Group()
-        self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
+        # Init backend (board)
         self.player_name_won = ""
-        self.time_out = time_out
-
-        # Init game board and screen
+        self.time_out = self.game_api.time_out
         self.init_board()
-        self.draw_all_sprites()  # Update screen
+
+        # Init frontend (screen)
+        self.to_draw_game = to_draw_game
+        if self.to_draw_game:
+            pg.init()
+            self.all_sprites = pg.sprite.Group()
+            self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
+            self.draw_all_sprites()  # Update screen
 
     def __call__(self, *args, **kwargs):
         self.game_loop()
@@ -32,12 +32,13 @@ class Game:
         running = True
 
         while running:
-            for event in pg.event.get():
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
+            if self.to_draw_game:
+                for event in pg.event.get():
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            running = False
+                    elif event.type == pg.QUIT:
                         running = False
-                elif event.type == pg.QUIT:
-                    running = False
 
             # Play players turn
             current_player = self.get_current_player()
@@ -45,7 +46,8 @@ class Game:
                 print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
                 self.play_player_turn(current_player)
                 print(f'Turn {self.game_api.num_turn} ended.')
-                self.draw_all_sprites()
+                if self.to_draw_game:
+                    self.draw_all_sprites()
                 self.print_game_status()
                 running = self.check_for_victory()
             except:
@@ -63,7 +65,8 @@ class Game:
             else:
                 self.game_api.num_turn += 1
 
-        pg.quit()
+        if self.to_draw_game:
+            pg.quit()
 
     def get_current_player(self):
         current_player_id = self.game_api.num_turn % len(self.game_api.players)
@@ -85,13 +88,13 @@ class Game:
         return running
 
     def print_game_status(self):
-        print('~~~~~ Game Status ~~~~~')
+        print(f'~~~~~ Game Status (turn {self.game_api.num_turn}): ~~~~~')
         self.print_players_status()
         self.print_islands_status()
         print('~~~~~~~~~~~~~~~~~~~~~~~')
 
     def print_players_status(self):
-        print('*** Players status: ***')
+        print(f'*** Players status (turn {self.game_api.num_turn}): ***')
         for player in self.game_api.players:
             num_owned_islands = self.game_api.get_num_player_owned_islands(player.player_id)
             print(f"{player.player_name} has "
@@ -103,31 +106,36 @@ class Game:
 
             for island in self.game_api.islands:
                 if island.own_player_id == player.player_id:
-                    print(f'Island in {island.location} has '
-                          f'{island.current_life} HP and '
-                          f'{len(island.ships)} ships')
+                    player_own_island = player.player_name
+                    self.print_island_status(island, player_own_island)
+
         print('-------------------')
 
     def print_islands_status(self):
-        print('*** Islands status: ***')
+        print(f'*** Islands status (turn {self.game_api.num_turn}): ***')
         for island in self.game_api.islands:
-            # check if there are ships in island, if there is get player name
-            if island.ships:
-                island_ship_player_name = self.game_api.players[island.ships[0].player_id].player_name
-                island_ship_player_name = f' of {island_ship_player_name}'
-            else:
-                island_ship_player_name = ''
 
             # check if island is captured and print island status accordingly
             if island.own_player_id == -1:
                 player_own_island = 'no one'
             else:
                 player_own_island = self.game_api.players[island.own_player_id].player_name
-            print(f'Island in {island.location} '
-                  f'is owned by {player_own_island} and has '
-                  f'{island.current_life} HP and '
-                  f'{len(island.ships)} ships{island_ship_player_name}.')
+            self.print_island_status(island, player_own_island)
         print('-------------------')
+
+    def print_island_status(self, island, player_own_island):
+        # check if there are ships in island, if there is get player name
+        if island.ships:
+            island_ship_player_name = self.game_api.players[island.ships[0].player_id].player_name
+            island_ship_player_name = f' of {island_ship_player_name}'
+        else:
+            island_ship_player_name = ''
+
+        # Print island status
+        print(f'Island in {island.location} '
+              f'is owned by {player_own_island} and has '
+              f'{island.current_life} HP and '
+              f'{len(island.ships)} ships{island_ship_player_name}.')
 
     def init_board(self):
         # Init board with 'Sea' tiles
