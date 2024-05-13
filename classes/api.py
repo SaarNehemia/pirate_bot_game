@@ -34,10 +34,10 @@ class API():
         # Init all other attributes
         self.num_turn = 0
         self.time_out = time_out
-        self.direction_dict = {'N': np.array([0, -1]),
-                               'S': np.array([0, 1]),
-                               'W': np.array([-1, 0]),
-                               'E': np.array([1, 0])}
+        self.directions_dict = {'N': np.array([0, -1]),
+                                'S': np.array([0, 1]),
+                                'W': np.array([-1, 0]),
+                                'E': np.array([1, 0])}
 
     # ------------------------------- GET API ATTRIBUTES METHODS ----------------------------------- #
     def get_num_turn(self) -> int:
@@ -51,6 +51,12 @@ class API():
         :return: maximal num turns until game ends.
         """
         return self.time_out
+
+    def get_directions_dict(self):
+        """
+        :return: directions dict (key=letter, value=normalized vector)
+        """
+        return self.directions_dict
 
     def get_board_size(self) -> int:
         """
@@ -239,7 +245,7 @@ class API():
         """
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
-        destination = ship.ship_speed * self.direction_dict[direction]
+        destination = ship.ship_speed * self.directions_dict[direction]
         self.move_ship_towards_destination(ship_id, destination)
 
     def move_ship_towards_destination(self, ship_id, destination) -> None:
@@ -326,7 +332,7 @@ class API():
 
             # get new location and check for collision
             direction_key = self._get_direction_key(direction_value)
-            new_location = last_location + self.direction_dict[direction_key]
+            new_location = last_location + self.directions_dict[direction_key]
             collision_info = self.check_location(new_location)
 
             # In case of detected collision try other direction if diagonal movement
@@ -336,7 +342,7 @@ class API():
                 direction_value = np.array([location_diff[random_index], 0]) / abs(location_diff[random_index])
                 direction_value = np.flip(direction_value) if random_index else direction_value  # vertical if needed
                 direction_key = self._get_direction_key(direction_value)
-                new_location = last_location + self.direction_dict[direction_key]
+                new_location = last_location + self.directions_dict[direction_key]
                 collision_info = self.check_location(new_location)
 
             # In case of detected collision return last possible location and collision info
@@ -389,10 +395,10 @@ class API():
         :return: direction key ('N'/'E'/'W'/'S')
         """
         # Get direction key from value
-        all_direction_values = list(self.direction_dict.values())
+        all_direction_values = list(self.directions_dict.values())
         for direction_index, current_direction_value in enumerate(all_direction_values):
             if (direction_value == current_direction_value).all():
-                direction_key = list(self.direction_dict.keys())[direction_index]
+                direction_key = list(self.directions_dict.keys())[direction_index]
                 return direction_key
 
     @staticmethod

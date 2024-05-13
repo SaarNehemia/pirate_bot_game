@@ -6,7 +6,7 @@ from classes.ship import Ship
 
 class Island:
     def __init__(self, location: np.ndarray, current_life: int, ship_creation_time: float):
-        self.island_id = ""
+        self.island_id = -1
         self.own_player_id = -1  # not captured by any player
         self.location = location
         self.ships = []
