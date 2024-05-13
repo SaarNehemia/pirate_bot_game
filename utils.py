@@ -42,9 +42,8 @@ def split_list_according_to_indices_list(my_list: list, indices_list: list,
         return l1
 
 
-def verify_location(location: tuple, board_size: int):
+def verify_location(location: np.ndarray, board_size: int) -> np.ndarray:
     # Keep location on the board
-    location = np.array(location)
     if location[0] < 0:
         location[0] = 0
     if location[0] > board_size - 1:
@@ -53,7 +52,7 @@ def verify_location(location: tuple, board_size: int):
         location[1] = 0
     if location[1] > board_size - 1:
         location[1] = board_size - 1
-    return tuple(location)
+    return location
 
 
 class FrontEndObj(pg.sprite.Sprite):

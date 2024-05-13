@@ -1,4 +1,5 @@
 import random
+from typing import Union
 
 import numpy as np
 
@@ -33,10 +34,10 @@ class API():
         # Init all other attributes
         self.num_turn = 0
         self.time_out = time_out
-        self.direction_dict = {'N': (0, -1),
-                               'S': (0, 1),
-                               'W': (-1, 0),
-                               'E': (1, 0)}
+        self.direction_dict = {'N': np.array([0, -1]),
+                               'S': np.array([0, 1]),
+                               'W': np.array([-1, 0]),
+                               'E': np.array([1, 0])}
 
     # ------------------------------- GET API ATTRIBUTES METHODS ----------------------------------- #
     def get_num_turn(self) -> int:
@@ -116,7 +117,7 @@ class API():
         """
         return len(self.blocks)
 
-    def get_blocks_locations(self) -> list[tuple]:
+    def get_blocks_locations(self) -> list[np.ndarray]:
         """
         :return: all blocks location in the current board.
         """
@@ -133,7 +134,7 @@ class API():
         """
         return len(self.islands)
 
-    def get_islands_locations(self) -> list[tuple]:
+    def get_islands_locations(self) -> list[np.ndarray]:
         """
         :return: all islands locations in the current board.
         """
@@ -153,7 +154,7 @@ class API():
                 player_owned_island_indices.append(island_id)
         return player_owned_island_indices
 
-    def get_player_owned_islands_locations(self, player_id: int) -> list[tuple]:
+    def get_player_owned_islands_locations(self, player_id: int) -> list[np.ndarray]:
         """
         :param player_id:
         :return: all islands locations that the given player owns.
@@ -185,7 +186,7 @@ class API():
                                                                      return_in_indices_list=False)
         return [neutral_island_index for neutral_island_index, _ in enumerate(neutral_islands)]
 
-    def get_neutral_islands_locations(self) -> list[tuple]:
+    def get_neutral_islands_locations(self) -> list[np.ndarray]:
         """
         :return: all neutral islands locations.
         """
@@ -210,14 +211,14 @@ class API():
         """
         return self.players[player_id].get_ships_ids()
 
-    def get_player_ships_locations(self, player_id: int) -> list[tuple]:
+    def get_player_ships_locations(self, player_id: int) -> list[np.ndarray]:
         """
         :param player_id:
         :return: current ships locations of given player.
         """
         return self.players[player_id].get_ships_locations()
 
-    def get_player_ship_location_from_id(self, player_id: int, ship_id: int) -> tuple:
+    def get_player_ship_location_from_id(self, player_id: int, ship_id: int) -> np.ndarray:
         """
         :param player_id:
         :param ship_id:
@@ -227,26 +228,21 @@ class API():
         ship_index = self.get_player_ships_ids(player_id).index(ship_id)
         return player_ships_locations[ship_index]
 
-    def move_ship(self, ship_id: int, direction: str) -> None:
+    def move_ship_in_direction(self, ship_id: int, direction: str) -> None:
         """
-         This function moves given ship in given direction on board with ship's speed.
-         If off-bounds, stay in place.
+         This function moves given ship in given direction with ship's speed on board.
+         Only horizontal movement or vertical movement are supported.
+         If reached board limits, stay there.
+         If reached collision (block/island/other ship) return relevant location
         :param ship_id:
         :param direction: options: 'N' (north, up), 'E' (east, right), 'W' (west, left), 'S' (south, down)
         """
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
-        player_id = self.get_my_player_id()
-        self._update_tile_ship_left(ship)
-        new_location, collision_info = self.check_ship_route(player_id=player_id,
-                                                             ship_id=ship_id,
-                                                             direction=direction)
-        ship.update_location(new_location, self.board_size)
-        if collision_info == 'islands':
-            ship.frontend_obj.kill()
-        self._update_tile_ship_entered(ship)
+        destination = ship.ship_speed * self.direction_dict[direction]
+        self.move_ship_towards_destination(ship_id, destination)
 
-    def move_ship_towards_location(self, ship_id, location) -> None:
+    def move_ship_towards_destination(self, ship_id, destination) -> None:
         """
         This function moves given ship towards given location on board.
         if location is diagonal, choose randomly between horizontal or vertical direction.
@@ -255,80 +251,118 @@ class API():
         :param ship_id:
         :param location:
         """
+        # check ship route to destination
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
-        horizontal_diff, vertical_diff = tuple(np.array(location) - np.array(ship.location))
+        player_id = self.get_my_player_id()
+        print(f"ship {ship_id} wants to move from {ship.location} to {destination}")
+        new_location, collision_info = self.check_ship_route_to_destination(player_id, ship_id, destination)
 
-        # ship in location
-        if horizontal_diff == 0 and vertical_diff == 0:
-            return
+        # update ship location
+        print(f"ship {ship_id} move from {ship.location} to {new_location}")
+        if not (new_location == ship.location).all():
+            self._update_tile_ship_left(ship)
+            ship.update_location(new_location, self.board_size)
+            self._update_tile_ship_entered(ship)
 
-        # ship only need to move horizontally
-        if horizontal_diff != 0 and vertical_diff == 0:
-            self._move_horizontally(ship_id, horizontal_diff)
-
-        if horizontal_diff == 0 and vertical_diff != 0:
-            self._move_vertically(ship_id, vertical_diff)
-
-        if horizontal_diff != 0 and vertical_diff != 0:
-            if random.randint(0, 1) == 0:
-                self._move_horizontally(ship_id, horizontal_diff)
-            else:
-                self._move_vertically(ship_id, vertical_diff)
-
-    def check_ship_route(self, player_id: int, ship_id: int, direction: str) \
-            -> tuple[tuple, tuple[str, tuple, int]]:
-        """
-        This function checks if given ship's route of given player in given direction is clean
-        taking into account ship's speed. If clean, returns new location.
-        If blocked, return last available location (one step before block or location of island/colliding ship).
-        :param player_id:
-        :param ship_id:
-        :param direction: options: 'N' (north, up), 'E' (east, right), 'W' (west, left), 'S' (south, down)
-        :return: new_location: last available location given ship's speed and current location,
-                               taking into account islands and blocks on the way.
-                 collision_info: None if no collision, tuple containing 3 or 4 parameters if there is a collision:
-                 type of collision (blocks/islands/ships),
-                 last available location (one step before block or location of island/colliding ship)
-                 and collided object id/ids (block id or island id or ship & player id)
-        """
+    def check_ship_route_to_destination(self, player_id: int, ship_id: int, destination: np.ndarray)\
+            -> tuple[np.ndarray, dict]:
         ship = self.players[player_id].get_ship_obj(ship_id)
-        current_location = ship.location
-        collision_info = None
-        for step in range(ship.ship_speed + 1):
+        new_location, collision_info = self.check_route_from_location_to_destination(location=ship.location,
+                                                                                     destination=destination,
+                                                                                     num_steps=ship.ship_speed)
+        return new_location, collision_info
+
+    def check_route_from_location_to_destination(self, location: np.ndarray, destination: np.ndarray, num_steps: int = np.inf):
+
+        # update horizontal and vertical diff
+        last_location = location
+        location_diff = destination - last_location
+
+        # Set num steps if not given
+        if num_steps == np.inf:
+            num_steps = sum(location_diff)
+
+        for step in range(num_steps + 1):
             if step == 0: continue
-            new_location = tuple(np.array(current_location) + \
-                                 step * np.array(self.direction_dict[direction]))
-            new_location = utils.verify_location(new_location, self.board_size)
-            current_obj = self.board[new_location[0]][new_location[1]]
-            if isinstance(current_obj, Block):
-                print(f'ship encountered block in {new_location}')
-                collision_info = 'blocks', new_location, current_obj.block_id
-                new_location = tuple(np.array(current_location) + \
-                                     (step - 1) * np.array(self.direction_dict[direction]))
+
+            # location reached destination
+            if not location_diff.any():
+                return last_location, collision_info
+
+            # ship need to move diagonally
+            elif location_diff.all():
+                if random.randint(0, 1) == 0:
+                    location_diff = np.array([location_diff[0], 0])  # go horizontally
+                else:
+                    location_diff = np.array([0, location_diff[1]])  # go vertically
+
+            # ship only need to move horizontally or vertically
+            else:
+                pass
+
+            # get new location
+            direction_key = self._get_direction_from_diff(location_diff)
+            new_location = last_location + self.direction_dict[direction_key]
+
+            # check for island/ship/block collision
+            collision_info = self.check_location(new_location)
+            if collision_info['collision type'] != 'no':
+                if collision_info['collision type'] == 'blocks':
+                    new_location = last_location
                 return new_location, collision_info
-            elif isinstance(current_obj, Island):
-                collision_info = 'islands', new_location, current_obj.island_id
-                print(f'ship encountered island in {new_location}')
-                return new_location, collision_info
-            elif isinstance(current_obj, Ship):
-                collision_info = 'ships', new_location, current_obj.player_id, current_obj.ship_id
-                return new_location, collision_info
-            return new_location, collision_info
+
+            # update horizontal and vertical diff
+            last_location = new_location
+            location_diff = destination - last_location
+
+        collision_info = self.check_location(last_location)
+        return new_location, collision_info
+
+    def check_location(self, location) -> dict:
+        location = utils.verify_location(location, self.board_size)
+        current_obj = self.board[location[0]][location[1]]
+        collision_info = dict()
+
+        if isinstance(current_obj, str):  # Sea tile
+            collision_info = self._set_collision_info('no', None)
+
+        elif isinstance(current_obj, Block):  # block tile
+            print(f'There is a block in {location}')
+            collision_info = self._set_collision_info('blocks', None)
+
+        elif isinstance(current_obj, Island):  # island tile
+            print(f'There is an island in {location}')
+            collision_info = self._set_collision_info('islands', current_obj.island_id)
+
+        elif isinstance(current_obj, Ship):  # ship tile
+            print(f'There is another ship in {location}')
+            collision_info = self._set_collision_info('ships', (current_obj.player_id, current_obj.ship_id))
+
+        return collision_info
+
+    def _get_direction_from_diff(self, location_diff: np.ndarray) -> str:
+        """
+        :param location_diff: must be only vertical or only horizontal
+        :return: direction key ('N'/'E'/'W'/'S')
+        """
+        # Normalize location difference to get direction
+        current_direction_value = location_diff / max(abs(location_diff))
+
+        # Get direction key from value
+        all_direction_values = list(self.direction_dict.values())
+        for direction_index, direction_value in enumerate(all_direction_values):
+            if (direction_value == current_direction_value).all():
+                direction_key = list(self.direction_dict.keys())[direction_index]
+                return direction_key
 
     # --------------------------------- INTERNAL METHODS ------------------------------------------ #
 
-    def _move_vertically(self, ship_id: int, vertical_diff: int):
-        if vertical_diff > 0:
-            self.move_ship(ship_id, direction='S')
-        else:
-            self.move_ship(ship_id, direction='N')
-
-    def _move_horizontally(self, ship_id: int, horizontal_diff: int):
-        if horizontal_diff > 0:
-            self.move_ship(ship_id, direction='E')
-        else:
-            self.move_ship(ship_id, direction='W')
+    @staticmethod
+    def _set_collision_info(collision_type: str, collided_object_id=Union[int, tuple[int, int]]):
+        collision_info = {'collision type': collision_type,
+                          'collided object id': collided_object_id}
+        return collision_info
 
     def _update_tile_ship_left(self, ship: Ship):
         current_obj = self.board[ship.location[0]][ship.location[1]]
@@ -340,11 +374,11 @@ class API():
 
     def _update_tile_ship_entered(self, ship: Ship):
         current_obj = self.board[ship.location[0]][ship.location[1]]
+
+        # ship reached island
         if isinstance(current_obj, Island):
             island = current_obj
-            if not island.ships:  # no ships on island
-                island.add_ship(ship)
-            elif island.ships[0].player_id == ship.player_id:  # only my ships on island
+            if not island.ships or island.ships[0].player_id == ship.player_id:  # no ships or my ships on island
                 island.add_ship(ship)
             else:  # enemy ships on island!
                 # prints island and collision status
@@ -360,11 +394,14 @@ class API():
                 island.remove_ship(enemy_ship)
                 self._ships_collide(enemy_ship, ship)
 
-        elif isinstance(current_obj, Ship):  # ship collision
+        # ship collision
+        elif isinstance(current_obj, Ship):
             other_ship = current_obj
             self._ships_collide(ship, other_ship)
             self.board[ship.location[0]][ship.location[1]] = 'Sea'
-        else:  # move ship freely
+
+        # ship destination is sea
+        else:
             self.board[ship.location[0]][ship.location[1]] = ship
 
     def _ships_collide(self, ship1: Ship, ship2: Ship):

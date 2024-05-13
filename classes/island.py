@@ -1,9 +1,11 @@
+import numpy as np
+
 import utils
 from classes.ship import Ship
 
 
 class Island:
-    def __init__(self, location: tuple, current_life: int, ship_creation_time: float):
+    def __init__(self, location: np.ndarray, current_life: int, ship_creation_time: float):
         self.island_id = ""
         self.own_player_id = -1  # not captured by any player
         self.location = location
@@ -14,6 +16,7 @@ class Island:
 
     def add_ship(self, ship: Ship):
         self.ships.append(ship)
+        ship.frontend_obj.kill()
 
     def remove_ship(self, ship: Ship):
         self.ships.remove(ship)
