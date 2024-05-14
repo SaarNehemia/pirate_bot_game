@@ -1,2 +1,3 @@
-# pirate_game
-pirate game like Skillz: develop a bot to capture islands and defeat other team
+# pirate_bot_game
+pirate bot game (inspired by Skillz high school coding competition).
+Develop a bot that moves ships across the board, capture islands and destroy enemy ships.
