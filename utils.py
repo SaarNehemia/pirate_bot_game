@@ -35,6 +35,29 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 
+def get_class_from_module_name(folder_name: str, module_name: str):
+    my_module = __import__(f'{folder_name}.{module_name}')
+    my_class = getattr(my_module, module_name)
+    class_name = get_class_name_from_module_name(module_name)
+    return getattr(my_class, class_name)
+
+
+def get_class_name_from_module_name(module_name: str) -> str:
+    """
+    replace every underscore with next letter capitalized"""
+    class_name = ''
+    capitalized_letter = True
+    for character in module_name:
+        if character != '_':
+            class_name += character.upper() if capitalized_letter else character
+            if capitalized_letter:
+                capitalized_letter = not capitalized_letter
+        else:
+            class_name += ''
+            capitalized_letter = True
+    return class_name
+
+
 def split_list_according_to_indices_list(my_list: list, indices_list: list,
                                          return_in_indices_list: bool):
     """

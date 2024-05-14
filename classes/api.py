@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import random
 from typing import Union
 
@@ -11,7 +12,7 @@ from classes.ship import Ship
 
 
 class API():
-    def __init__(self, board_settings: dict, player_names: list[str], time_out: int):
+    def __init__(self, board_name: str, player_names: list[str], time_out: int):
         # init players in random order
         self.player_names = player_names
         random.shuffle(self.player_names)
@@ -19,17 +20,12 @@ class API():
         for player_id, player_name in enumerate(player_names):
             self.players.append(Player(player_id, player_name))
 
-        # Init board and extract all board params to attributes
+        # Init board and extract all board settings to API attributes
         self.board = []  # Backend
-        for key, value in board_settings.items():
+        board_class = utils.get_class_from_module_name(folder_name='boards',
+                                                       module_name=board_name)
+        for key, value in board_class.get_board_settings().items():
             setattr(self, key, value)
-        # self.board_size = board_settings['board_size']
-        # self.blocks = board_settings['blocks']
-        # self.islands = board_settings['islands']
-        # self.players_base_islands_indices = board_settings['players_base_islands_indices']
-        # self.players_ship_speed = board_settings['players_ship_speed']
-        # self.players_num_ships = board_settings['players_num_ships']
-        # self.victory_criterion = board_settings['victory_criterion']
 
         # Init all other attributes
         self.num_turn = 0

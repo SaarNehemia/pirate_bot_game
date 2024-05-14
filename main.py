@@ -1,3 +1,4 @@
+import utils
 from classes.api import API
 from classes.game import Game
 
@@ -16,12 +17,9 @@ if __name__ == '__main__':
     # Start game
     for i in range(num_games):
         print(f"****************** Game number {i + 1} out of {num_games} started ******************")
-        # Import board settings
-        board = __import__(f'boards.{board_name}')
-        board_settings = getattr(board, board_name).get_board_settings()
 
         # init API and game
-        game_api = API(board_settings=board_settings,
+        game_api = API(board_name=board_name,
                        player_names=player_names,
                        time_out=time_out)
         current_game = Game(game_api, to_draw_game  )
