@@ -22,6 +22,8 @@ class Game:
             pg.init()
             self.all_sprites = pg.sprite.Group()
             self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
+            pg.display.set_caption('Pirate Bot Game')
+
             self.draw_all_sprites()  # Update screen
 
     def __call__(self, *args, **kwargs):

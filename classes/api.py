@@ -338,7 +338,7 @@ class API():
             # In case of detected collision try other direction if diagonal movement
             if collision_info['collision type'] != 'no' and location_diff.all():
                 # check other direction if diagonal movement
-                random_index = not random_index
+                random_index = int(not random_index)
                 direction_value = np.array([location_diff[random_index], 0]) / abs(location_diff[random_index])
                 direction_value = np.flip(direction_value) if random_index else direction_value  # vertical if needed
                 direction_key = self._get_direction_key(direction_value)
