@@ -44,21 +44,21 @@ class Game:
 
             # Play players turn
             current_player = self.get_current_player()
-            # try:
-            print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
-            self.play_player_turn(current_player)
-            print(f'Turn {self.game_api.num_turn} ended.')
-            if self.to_draw_game:
-                self.draw_all_sprites()
-            self.print_game_status()
-            running = self.check_for_victory()
-            # except:
-            #     print(f'{current_player.player_name} code crashed :(')
-            #     print(f'Turn {self.game_api.num_turn} ended.')
-            #     other_player = self.game_api.players[~current_player.player_id]
-            #     self.player_name_won = other_player.player_name
-            #     print(f"{self.player_name_won} won!")
-            #     running = False
+            try:
+                print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
+                self.play_player_turn(current_player)
+                print(f'Turn {self.game_api.num_turn} ended.')
+                if self.to_draw_game:
+                    self.draw_all_sprites()
+                self.print_game_status()
+                running = self.check_for_victory()
+            except:
+                print(f'{current_player.player_name} code crashed :(')
+                print(f'Turn {self.game_api.num_turn} ended.')
+                other_player = self.game_api.players[~current_player.player_id]
+                self.player_name_won = other_player.player_name
+                print(f"{self.player_name_won} won!")
+                running = False
 
             # check if time out reached, if not update num turn
             if self.game_api.num_turn >= self.time_out:

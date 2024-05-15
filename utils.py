@@ -28,7 +28,7 @@ ISLAND_ASPECT_RATIO = 1.55  # multiply width by this
 
 SIZE_DICT = {'Block': (BLOCK_ASPECT_RATIO * 50, 50),
              'Island': (ISLAND_ASPECT_RATIO * 70, 70),
-             'Player': (80, 80),
+             'Player': (70, 70),
              }
 
 SCREEN_WIDTH = 800
