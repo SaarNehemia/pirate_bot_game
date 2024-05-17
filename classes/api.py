@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import random
 from typing import Union
 
@@ -12,7 +11,7 @@ from classes.ship import Ship
 
 
 class API():
-    def __init__(self, board_name: str, player_names: list[str], time_out: int):
+    def __init__(self, board_name: str, player_names: list[str], max_num_turns: int):
         # init players in random order
         self.player_names = player_names
         random.shuffle(self.player_names)
@@ -29,7 +28,7 @@ class API():
 
         # Init all other attributes
         self.num_turn = 0
-        self.time_out = time_out
+        self.max_num_turns = max_num_turns
         self.directions_dict = {'N': np.array([0, -1]),
                                 'S': np.array([0, 1]),
                                 'W': np.array([-1, 0]),
@@ -42,11 +41,11 @@ class API():
         """
         return self.num_turn
 
-    def get_time_out(self) -> int:
+    def get_max_num_turns(self) -> int:
         """
         :return: maximal num turns until game ends.
         """
-        return self.time_out
+        return self.max_num_turns
 
     def get_directions_dict(self):
         """

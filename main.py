@@ -7,7 +7,7 @@ if __name__ == '__main__':
     player_names: list[str] = ['yossi', 'saar']
     board_name: str = 'board1'
     num_games: int = 2
-    time_out: int = 1000
+    max_num_turns: int = 1000
     to_draw_game: bool = True
 
     # Init game results count
@@ -21,7 +21,7 @@ if __name__ == '__main__':
         # init API and game
         game_api = API(board_name=board_name,
                        player_names=player_names,
-                       time_out=time_out)
+                       max_num_turns=max_num_turns)
         current_game = Game(game_api, to_draw_game  )
 
         # Play game

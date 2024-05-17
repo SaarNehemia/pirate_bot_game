@@ -13,7 +13,7 @@ class Game:
 
         # Init backend (board)
         self.player_name_won = ""
-        self.time_out = self.game_api.time_out
+        self.max_num_turns = self.game_api.max_num_turns
         self.init_board()
 
         # Init frontend (screen)
@@ -61,7 +61,7 @@ class Game:
                 running = False
 
             # check if time out reached, if not update num turn
-            if self.game_api.num_turn >= self.time_out:
+            if self.game_api.num_turn >= self.max_num_turns:
                 self.player_name_won = "draw"
                 running = False
             else:
