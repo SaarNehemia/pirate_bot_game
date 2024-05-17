@@ -112,112 +112,54 @@ class API():
 
     # --------------------------------- BLOCKS METHODS ------------------------------------------- #
 
-    def get_num_blocks(self) -> int:
-        """
-        :return: number of blocks in the current board.
-        """
-        return len(self.blocks)
-
-    def get_blocks_locations(self) -> list[np.ndarray]:
+    def get_blocks_info(self) -> list[dict]:
         """
         :return: all blocks location in the current board.
         """
-        blocks_locations = []
+        blocks_info = []
         for block in self.blocks:
-            blocks_locations.append(block.location)
-        return blocks_locations
+            blocks_info.append({'id': block.block_id,
+                                'location': block.location,
+                                'current_life': block.current_life})
+        return blocks_info
 
     # --------------------------------- ISLANDS METHODS ------------------------------------------- #
 
-    def get_num_islands(self) -> int:
+    def get_islands_info(self, **kwargs) -> list[dict]:
         """
-        :return: number of islands in the current board.
+        :param player_id: use -1 for neutral island, player_id for specific player or not at all for all islands
+        :return: List with info on all islands (or only neutral or only that given player owns).
+                 Each island info is a tuple of (id, own player id, location, current life, num ships on island, ship's player id).
         """
-        return len(self.islands)
 
-    def get_islands_locations(self) -> list[np.ndarray]:
-        """
-        :return: all islands locations in the current board.
-        """
-        islands_locations = []
+        islands_info = []
         for island in self.islands:
-            islands_locations.append(island.location)
-        return islands_locations
+            island_ships_player_id = island.ships[0].player_id if island.ships else -1
+            island_info = {'id': island.island_id,
+                           'own_player_id': island.own_player_id,
+                           'location': island.location,
+                           'current_life': island.current_life,
+                           'num_ships': len(island.ships),
+                           'ships player_id': island_ships_player_id}
+            # if player_id given return only islands info of given player.
+            if 'player_id' in kwargs:
+                player_id = kwargs['player_id']
+                if island.own_player_id == player_id:
+                    islands_info.append(island_info)
+            # if player_id not given return all islands info on board.
+            else:
+                islands_info.append(island_info)
 
-    def get_player_owned_islands_indices(self, player_id: int) -> list[int]:
-        """
-        :param player_id:
-        :return: all islands indices that the given player owns.
-        """
-        player_owned_island_indices = []
-        for island_id, island in enumerate(self.islands):
-            if island.own_player_id == player_id:
-                player_owned_island_indices.append(island_id)
-        return player_owned_island_indices
-
-    def get_player_owned_islands_locations(self, player_id: int) -> list[np.ndarray]:
-        """
-        :param player_id:
-        :return: all islands locations that the given player owns.
-        """
-        player_owned_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
-                                                                          indices_list=
-                                                                          self.get_player_owned_islands_indices(
-                                                                              player_id),
-                                                                          return_in_indices_list=True)
-        return [island.location for island in player_owned_islands]
-
-    def get_num_player_owned_islands(self, player_id: int) -> int:
-        """
-        :param player_id:
-        :return: number of islands that the given player owns.
-        """
-        return len(self.get_player_owned_islands_indices(player_id))
-
-    def get_neutral_islands_indices(self) -> list[int]:
-        """
-        :return: all neutral islands indices.
-        """
-        all_owned_island_indices = []
-        for player_id, _ in self.players:
-            player_owned_island_indices = self.get_player_owned_islands_indices(player_id)
-            all_owned_island_indices.extend(player_owned_island_indices)
-        neutral_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
-                                                                     indices_list=all_owned_island_indices,
-                                                                     return_in_indices_list=False)
-        return [neutral_island_index for neutral_island_index, _ in enumerate(neutral_islands)]
-
-    def get_neutral_islands_locations(self) -> list[np.ndarray]:
-        """
-        :return: all neutral islands locations.
-        """
-        neutral_islands = utils.split_list_according_to_indices_list(my_list=self.islands,
-                                                                     indices_list=self.get_neutral_islands_indices(),
-                                                                     return_in_indices_list=True)
-        return [island.location for island in neutral_islands]
+        return islands_info
 
     # --------------------------------- SHIPS METHODS ------------------------------------------- #
 
-    def get_player_num_ships(self, player_id: int) -> int:
+    def get_player_ships_info(self, player_id: int) -> list[dict]:
         """
         :param player_id:
-        :return: current number of ships of given player.
+        :return: List of given player current ships info (id, location, ship speed, is_moved).
         """
-        return len(self.players[player_id].ships)
-
-    def get_player_ships_ids(self, player_id: int) -> list[int]:
-        """
-        :param player_id:
-        :return: current ships ids of given player.
-        """
-        return self.players[player_id].get_ships_ids()
-
-    def get_player_ships_locations(self, player_id: int) -> list[np.ndarray]:
-        """
-        :param player_id:
-        :return: current ships locations of given player.
-        """
-        return self.players[player_id].get_ships_locations()
+        return self.players[player_id].get_ships_info()
 
     def get_player_ship_location_from_id(self, player_id: int, ship_id: int) -> np.ndarray:
         """
@@ -225,8 +167,10 @@ class API():
         :param ship_id:
         :return: ship location from ship id of given player.
         """
-        player_ships_locations = self.get_player_ships_locations(player_id)
-        ship_index = self.get_player_ships_ids(player_id).index(ship_id)
+        player_ships_info = self.get_player_ships_info(player_id)
+        player_ships_ids = [player_ship_info['id'] for player_ship_info in player_ships_info]
+        player_ships_locations = [player_ship_info['location'] for player_ship_info in player_ships_info]
+        ship_index = player_ships_ids.index(ship_id)
         return player_ships_locations[ship_index]
 
     def move_ship_in_direction(self, ship_id: int, direction: str) -> None:
@@ -256,6 +200,13 @@ class API():
         current_player_obj = self.players[self.get_my_player_id()]
         ship = current_player_obj.get_ship_obj(ship_id)
         player_id = self.get_my_player_id()
+
+        # Tried to move same ship twice in the same turn
+        if ship.is_moved:
+            current_player_name = current_player_obj.player_name
+            raise utils.InvalidMoveError(f"{current_player_name} tried to move ship {ship_id} twice.")
+
+        # Move ship
         print(f"ship {ship_id} wants to move from {ship.location} to {destination}")
         new_location, collision_info = self.check_ship_route_to_destination(player_id, ship_id, destination)
 

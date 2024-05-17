@@ -12,15 +12,13 @@ class Yossi:
         if self.strategy == 1:
             # strategy 1: move my first ship to first enemy ship
             try:
-                my_ships_ids = game_api.get_player_ships_ids(my_player_id)
-                my_first_ship_id = my_ships_ids[0]
+                my_first_ship_id = game_api.get_player_ships_info(my_player_id)[0]['id']
             except IndexError:
                 print('No ships for me :(')
                 return
 
             try:
-                enemy_ships_ids = game_api.get_player_ships_ids(enemy_player_id)
-                first_enemy_ship_id = enemy_ships_ids[0]
+                first_enemy_ship_id = game_api.get_player_ships_info(enemy_player_id)[0]['id']
             except IndexError:
                 print('No ships for enemy :)')
                 self.strategy = 2
@@ -35,20 +33,16 @@ class Yossi:
         elif self.strategy == 2:
             # strategy 2: move my first ship towards first enemy island
             try:
-                my_ships_ids = game_api.get_player_ships_ids(my_player_id)
-                my_first_ship_id = my_ships_ids[0]
+                my_first_ship_id = game_api.get_player_ships_info(my_player_id)[0]['id']
             except IndexError:
                 print('No ships for me :(')
                 return
 
             try:
-                enemy_island_locations = game_api.get_player_owned_islands_locations(player_id=enemy_player_id)
-                first_enemy_island_location = enemy_island_locations[0]
+                enemy_islands_info = game_api.get_islands_info(player_id=enemy_player_id)
+                first_enemy_island_location = enemy_islands_info[0]['location']
             except IndexError:
                 print('No enemy islands :)')
-                self.strategy = 2
-                print(f'Changing strategy to {self.strategy}')
-                breakpoint()
                 return
 
             game_api.move_ship_towards_destination(ship_id=my_first_ship_id,
@@ -60,24 +54,21 @@ class Yossi:
             rest_time = 100
 
             try:
-                my_ships_id = game_api.get_player_ships_ids(my_player_id)
-                my_first_ship_id = my_ships_id[0]
-
-                my_ships_locations = game_api.get_player_ships_locations(player_id=my_player_id)
-                my_first_ship_location = my_ships_locations[0]
+                my_first_ship_id = game_api.get_player_ships_info(my_player_id)[0]['id']
+                my_first_ship_location = game_api.get_player_ships_info(my_player_id)[0]['location']
             except IndexError:
                 print('No ships for me :(')
                 return
 
             try:
-                my_islands_locations = game_api.get_player_owned_islands_locations(player_id=my_player_id)
-                my_first_island_location = my_islands_locations[0]
+                my_first_island_location = game_api.get_islands_info(player_id=my_player_id)[0]['location']
             except IndexError:
                 print('No islands for me :(')
                 return
 
             # ship rounds island only if it is not in base island
-            if game_api.get_num_turn() < game_api.get_num_players() or my_first_ship_location != my_first_island_location:
+            if game_api.get_num_turn() < game_api.get_num_players()\
+                    or my_first_ship_location != my_first_island_location:
                 self.ship_go_round(game_api=game_api, ship_id=my_first_ship_id, round_time=round_time)
                 return
 
