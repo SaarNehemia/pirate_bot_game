@@ -35,6 +35,10 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 
+class InvalidMoveError(Exception):
+    pass
+
+
 def get_class_from_module_name(folder_name: str, module_name: str):
     my_module = __import__(f'{folder_name}.{module_name}')
     my_class = getattr(my_module, module_name)
@@ -56,24 +60,6 @@ def get_class_name_from_module_name(module_name: str) -> str:
             class_name += ''
             capitalized_letter = True
     return class_name
-
-
-def split_list_according_to_indices_list(my_list: list, indices_list: list,
-                                         return_in_indices_list: bool):
-    """
-    l1 is a list of all elements in my_list whose indices aren't in indices_list.
-    l1 is a list of all elements in my_list whose indices are in indices_list.
-    based on: https://stackoverflow.com/questions/45649106/get-list-elements-that-are-not-in-index-list
-    """
-    indices = set(indices_list)  # convert to set for fast lookups
-    l1, l2 = [], []
-    l_append = (l1.append, l2.append)
-    for idx, element in enumerate(my_list):
-        l_append[idx in indices](element)
-    if return_in_indices_list:
-        return l2
-    else:
-        return l1
 
 
 def verify_location(location: np.ndarray, board_size: int) -> np.ndarray:

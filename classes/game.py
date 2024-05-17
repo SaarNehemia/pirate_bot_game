@@ -52,8 +52,9 @@ class Game:
                     self.draw_all_sprites()
                 self.print_game_status()
                 running = self.check_for_victory()
-            except:
-                print(f'{current_player.player_name} code crashed :(')
+            except Exception as e:
+                if not isinstance(e, utils.InvalidMoveError):
+                    print(f'{current_player.player_name} code crashed :(')
                 print(f'Turn {self.game_api.num_turn} ended.')
                 other_player = self.game_api.players[~current_player.player_id]
                 self.player_name_won = other_player.player_name
@@ -77,12 +78,13 @@ class Game:
     def play_player_turn(self, player):
         player.player_class.do_turn(self.game_api)
         self.update_islands_life()
+        self.reset_ships_is_moved()
 
     def check_for_victory(self):
         running = True
         victory_criterion = self.game_api.victory_criterion
         for player in self.game_api.players:
-            num_owned_island = self.game_api.get_num_player_owned_islands(player.player_id)
+            num_owned_island = len(self.game_api.get_islands_info(player_id=player.player_id))
             if num_owned_island >= victory_criterion:
                 self.player_name_won = player.player_name
                 print(f"{self.player_name_won} won!")
@@ -98,7 +100,7 @@ class Game:
     def print_players_status(self):
         print(f'*** Players status (turn {self.game_api.num_turn}): ***')
         for player in self.game_api.players:
-            num_owned_islands = self.game_api.get_num_player_owned_islands(player.player_id)
+            num_owned_islands = len(self.game_api.get_islands_info(player_id=player.player_id))
             print(f"{player.player_name} has "
                   f"{num_owned_islands} islands and "
                   f"{len(player.ships)} ships.")
@@ -210,3 +212,8 @@ class Game:
                 island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
                 island.current_life = -island.current_life
+
+    def reset_ships_is_moved(self):
+        for player in self.game_api.players:
+            for ship in player.ships:
+                ship.is_moved = False
