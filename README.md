@@ -13,7 +13,7 @@ Press code (green button) and copy HTTPS link to clone project to your local com
 
 You can also copy this link directly: https://github.com/SaarNehemia/pirate_bot_game.git
 
-write "git clone <paste HTTPS link>".
+write "git clone <link>". (paste HTTPS link)
 
 There you go - project is saved on your local computer.
 
