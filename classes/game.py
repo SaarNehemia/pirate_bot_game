@@ -44,22 +44,22 @@ class Game:
 
             # Play players turn
             current_player = self.get_current_player()
-            try:
-                print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
-                self.play_player_turn(current_player)
-                print(f'Turn {self.game_api.num_turn} ended.')
-                if self.to_draw_game:
-                    self.draw_all_sprites()
-                self.print_game_status()
-                running = self.check_for_victory()
-            except Exception as e:
-                if not isinstance(e, utils.InvalidMoveError):
-                    print(f'{current_player.player_name} code crashed :(')
-                print(f'Turn {self.game_api.num_turn} ended.')
-                other_player = self.game_api.players[~current_player.player_id]
-                self.player_name_won = other_player.player_name
-                print(f"{self.player_name_won} won!")
-                running = False
+            # try:
+            print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
+            self.play_player_turn(current_player)
+            print(f'Turn {self.game_api.num_turn} ended.')
+            if self.to_draw_game:
+                self.draw_all_sprites()
+            self.print_game_status()
+            running = self.check_for_victory()
+            # except Exception as e:
+            #     if not isinstance(e, utils.InvalidMoveError):
+            #         print(f'{current_player.player_name} code crashed :(')
+            #     print(f'Turn {self.game_api.num_turn} ended.')
+            #     other_player = self.game_api.players[~current_player.player_id]
+            #     self.player_name_won = other_player.player_name
+            #     print(f"{self.player_name_won} won!")
+            #     running = False
 
             # check if time out reached, if not update num turn
             if self.game_api.num_turn >= self.max_num_turns:
@@ -177,6 +177,7 @@ class Game:
                                                  ))
             # Update player ships
             player.ships = list(player_base_island.ships)
+            player.max_ship_id = len(player.ships) - 1
 
     def draw_all_sprites(self):
         # Update all sprites from board
@@ -196,6 +197,7 @@ class Game:
 
     def update_islands_life(self):
         for island in self.game_api.islands:
+            # Add/decrease life to island with ships
             if island.ships:
                 island_ships_player_id = island.ships[0].player_id
                 num_island_ships = len(island.ships)
@@ -212,6 +214,37 @@ class Game:
                 island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
                 island.current_life = -island.current_life
+
+            # Create ships on island
+            if self.game_api.num_turn % island.ship_creation_time == 0 and island.own_player_id != -1:
+                if island.ships:
+                    island_ships_player_id = island.ships[0].player_id
+
+                    # friendly ships on island
+                    if island.own_player_id == island_ships_player_id:
+                        self.create_ship_on_island(island)
+
+                    # enemy ships on island
+                    else:
+                        self.kill_ship_on_island(ship=island.ships[0], island=island)
+                else:
+                    self.create_ship_on_island(island)
+
+    def create_ship_on_island(self, island):
+        player = self.game_api.players[island.own_player_id]
+        new_ship = Ship(player_id=island.own_player_id,
+                        ship_id=player.max_ship_id + 1,
+                        ship_speed=self.game_api.players_ship_speed[island.own_player_id],
+                        location=island.location)
+        island.add_ship(new_ship)
+        player.add_ship(new_ship)
+        print(f'New ship of {player.player_name} created on island in {island.location}.')
+
+    def kill_ship_on_island(self, ship, island):
+        player = self.game_api.players[ship.player_id]
+        island.remove_ship(ship)
+        player.remove_ship(ship)
+        print(f'Ship of {player.player_name} destroyed on island in {island.location}.')
 
     def reset_ships_is_moved(self):
         for player in self.game_api.players:

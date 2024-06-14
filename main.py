@@ -7,7 +7,7 @@ if __name__ == '__main__':
     player_names: list[str] = ['yossi', 'saar']
     board_name: str = 'board1'
     num_games: int = 2
-    max_num_turns: int = 1000
+    max_num_turns: int = 5000
     to_draw_game: bool = True
 
     # Init game results count

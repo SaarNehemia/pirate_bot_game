@@ -9,6 +9,7 @@ class Player:
         self.player_class = utils.get_class_from_module_name(folder_name='players',
                                                              module_name=self.player_name)()
         self.ships = []
+        self.max_ship_id = 0
 
     def add_ship(self, ship: Ship):
         self.ships.append(ship)

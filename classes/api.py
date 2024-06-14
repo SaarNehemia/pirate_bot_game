@@ -27,7 +27,7 @@ class API():
             setattr(self, key, value)
 
         # Init all other attributes
-        self.num_turn = 0
+        self.num_turn = 1
         self.max_num_turns = max_num_turns
         self.directions_dict = {'N': np.array([0, -1]),
                                 'S': np.array([0, 1]),
@@ -392,7 +392,7 @@ class API():
                 print(f'{self.players[ship.player_id].player_name} is attacking '
                       f'{self.players[enemy_ship.player_id].player_name}')
 
-                # kills your ship one enemy ship
+                # kills your ship and one enemy ship
                 island.remove_ship(enemy_ship)
                 self._ships_collide(enemy_ship, ship)
 
