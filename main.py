@@ -3,13 +3,15 @@ from classes.api import API
 from classes.game import Game
 
 if __name__ == '__main__':
-    # Choose games settings
+    # ----------------------------------------- Choose games settings ----------------------------------------- #
     player_names: list[str] = ['yossi', 'saar']
     board_name: str = 'board1'
     num_games: int = 20
     max_num_turns: int = 1000
     to_draw_game: bool = True
     debug_mode = True
+
+    # ---------------------------------------------- DO NOT TOUCH ---------------------------------------------- #
 
     # Init game results count
     wins_count = dict((player_name, 0) for player_name in player_names)
