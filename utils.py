@@ -4,14 +4,14 @@ import numpy as np
 import pygame as pg
 
 COLOR_LIGHT_BLUE = (170, 255, 245)
-COLOR_BLACK = (0, 0, 0)
 COLOR_BROWN = (208, 130, 40)
-COLOR_BLUE = (0, 0, 200)
-COLOR_RED = (200, 0, 0)
+COLOR_BLACK = (0, 0, 0)
+COLOR_BLUE = (42, 101, 128)
+COLOR_RED = (198, 103, 53)
 
 COLORS_DICT = {'Sea': COLOR_LIGHT_BLUE,
-               'Block': COLOR_BLACK,
-               'Island': COLOR_BROWN,
+               'Block': COLOR_BROWN,
+               'Island': COLOR_BLACK,
                'Player': [COLOR_BLUE, COLOR_RED],
                }
 
@@ -31,8 +31,8 @@ SIZE_DICT = {'Block': (BLOCK_ASPECT_RATIO * 50, 50),
              'Player': (70, 70),
              }
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 0.8 * 1280
+SCREEN_HEIGHT = 0.8 * 720
 
 
 class InvalidMoveError(Exception):
@@ -95,12 +95,13 @@ class FrontEndObj(pg.sprite.Sprite):
         self.image = pg.transform.scale(self.image, SIZE_DICT[name])
         # self.rect = self.surf.get_rect()
         self.location = location
+        self.frontend_location = 0
 
     def draw_sprite(self, location, board_size, screen):
-        frontend_location = self.get_frontend_location(location, board_size)
+        self.frontend_location = self.get_frontend_location(location, board_size)
         # self.rect = self.surf.get_rect(center=frontend_location)
         # screen.blit(self.surf, self.rect)
-        screen.blit(self.image, frontend_location)
+        screen.blit(self.image, self.frontend_location)
 
     # def verify_frontend_location(self):
     #     # Keep sprite on the screen

@@ -6,9 +6,10 @@ if __name__ == '__main__':
     # Choose games settings
     player_names: list[str] = ['yossi', 'saar']
     board_name: str = 'board1'
-    num_games: int = 2
-    max_num_turns: int = 5000
+    num_games: int = 20
+    max_num_turns: int = 1000
     to_draw_game: bool = True
+    debug_mode = True
 
     # Init game results count
     wins_count = dict((player_name, 0) for player_name in player_names)
@@ -22,7 +23,7 @@ if __name__ == '__main__':
         game_api = API(board_name=board_name,
                        player_names=player_names,
                        max_num_turns=max_num_turns)
-        current_game = Game(game_api, to_draw_game  )
+        current_game = Game(game_api, to_draw_game, debug_mode)
 
         # Play game
         player_name_won = current_game()

@@ -1,3 +1,6 @@
+from time import sleep
+
+import numpy as np
 import pygame as pg
 from pygame.locals import KEYDOWN, K_ESCAPE
 
@@ -7,24 +10,39 @@ from classes.ship import Ship
 
 
 class Game:
-    def __init__(self, game_api: API, to_draw_game: bool):
+    def __init__(self, game_api: API, to_draw_game: bool, debug_mode: bool):
         # Init API
         self.game_api = game_api
 
         # Init backend (board)
         self.player_name_won = ""
+        self.debug_mode = debug_mode
         self.max_num_turns = self.game_api.max_num_turns
         self.init_board()
 
         # Init frontend (screen)
         self.to_draw_game = to_draw_game
         if self.to_draw_game:
+            # init screen
             pg.init()
             self.all_sprites = pg.sprite.Group()
+            # display_info = pg.display.Info()
+            # SCREEN_WIDTH, SCREEN_HEIGHT = 0.8 * np.array([display_info.current_w, display_info.current_h])
+            # self.screen = pg.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+
             self.screen = pg.display.set_mode([utils.SCREEN_WIDTH, utils.SCREEN_HEIGHT])
             pg.display.set_caption('Pirate Bot Game')
 
-            self.draw_all_sprites()  # Update screen
+            # init text font objects
+            self.player_font_size = 24
+            self.player_font_obj = pg.font.Font(pg.font.get_default_font(), self.player_font_size)
+            self.island_font_size = 12
+            self.island_font_obj = pg.font.Font(pg.font.get_default_font(), self.island_font_size)
+            self.player_won_font_size = 100
+            self.player_won_font_obj = pg.font.Font(pg.font.get_default_font(), self.player_won_font_size)
+
+            # Update screen
+            self.draw_all_sprites()
 
     def __call__(self, *args, **kwargs):
         self.game_loop()
@@ -44,27 +62,57 @@ class Game:
 
             # Play players turn
             current_player = self.get_current_player()
-            # try:
-            print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
-            self.play_player_turn(current_player)
-            print(f'Turn {self.game_api.num_turn} ended.')
-            if self.to_draw_game:
-                self.draw_all_sprites()
-            self.print_game_status()
-            running = self.check_for_victory()
-            # except Exception as e:
-            #     if not isinstance(e, utils.InvalidMoveError):
-            #         print(f'{current_player.player_name} code crashed :(')
-            #     print(f'Turn {self.game_api.num_turn} ended.')
-            #     other_player = self.game_api.players[~current_player.player_id]
-            #     self.player_name_won = other_player.player_name
-            #     print(f"{self.player_name_won} won!")
-            #     running = False
+
+            try:
+                print(f'Turn {self.game_api.num_turn} starting ({current_player.player_name} playing):')
+                self.play_player_turn(current_player)
+                print(f'Turn {self.game_api.num_turn} ended.')
+
+                if self.to_draw_game:
+                    self.draw_all_sprites()
+
+                self.print_game_status()
+                running = self.check_for_victory()
+
+            except Exception as e:
+                # notify player that his code has a bug and crashed (not invalid move)
+                if not isinstance(e, utils.InvalidMoveError):
+                    print(f'{current_player.player_name} code crashed :(')
+
+                # other player wins
+                print(f'Turn {self.game_api.num_turn} ended.')
+                other_player = self.game_api.players[~current_player.player_id]
+                self.player_name_won = other_player.player_name
+                print(f"{self.player_name_won} won!")
+                running = False
+
+                text = f"{other_player.player_name} won!"
+                text_width, text_height = self.player_won_font_obj.size(text)
+                text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
+                                 utils.SCREEN_HEIGHT // 2 - text_height // 2]
+                text_color = utils.COLORS_DICT['Player'][other_player.player_id]
+                self.print_text(font_obj=self.player_won_font_obj, text=text,
+                                frontend_location=text_location, color=text_color)
+                pg.display.flip()
+
+                if self.debug_mode:
+                    raise e
 
             # check if time out reached, if not update num turn
             if self.game_api.num_turn >= self.max_num_turns:
                 self.player_name_won = "draw"
                 running = False
+
+                if self.to_draw_game:
+                    text = "Draw!"
+                    text_width, text_height = self.player_won_font_obj.size(text)
+                    text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
+                                     utils.SCREEN_HEIGHT // 2 - text_height // 2]
+                    text_color = utils.COLORS_DICT['Island']
+                    self.print_text(font_obj=self.player_won_font_obj, text=text,
+                                    frontend_location=text_location, color=text_color)
+                    pg.display.flip()
+                    sleep(1)
             else:
                 self.game_api.num_turn += 1
 
@@ -89,6 +137,18 @@ class Game:
                 self.player_name_won = player.player_name
                 print(f"{self.player_name_won} won!")
                 running = False
+
+                if self.to_draw_game:
+                    text = f"{player.player_name} won!"
+                    text_width, text_height = self.player_won_font_obj.size(text)
+                    text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
+                                     utils.SCREEN_HEIGHT // 2 - text_height // 2]
+                    text_color = utils.COLORS_DICT['Player'][player.player_id]
+                    self.print_text(font_obj=self.player_won_font_obj, text=text,
+                                    frontend_location=text_location, color=text_color)
+                    pg.display.flip()
+                    sleep(1)
+
         return running
 
     def print_game_status(self):
@@ -193,7 +253,54 @@ class Game:
             sprite.draw_sprite(location=sprite.location,
                                board_size=self.game_api.board_size,
                                screen=self.screen)
+
+        # print players status on screen
+        for player in self.game_api.players:
+            num_owned_islands = len(self.game_api.get_islands_info(player_id=player.player_id))
+            num_ships = len(player.ships)
+            player_text = f'{player.player_name}: {num_owned_islands} islands, {num_ships} ships'
+            text_location = np.array([0, 0]) + player.player_id * np.array([0, self.player_font_size])
+            player_color = utils.COLORS_DICT['Player'][player.player_id]
+            self.print_text(font_obj=self.player_font_obj, text=player_text, frontend_location=text_location,
+                            color=player_color)
+
+        # print islands status on screen
+        for island in self.game_api.islands:
+            # island life
+            island_life_text = f'Life: {island.current_life}'
+            text_location = np.array(island.frontend_obj.frontend_location) + np.array([100, 20])
+            if island.own_player_id == -1:
+                island_color = utils.COLORS_DICT['Island']
+            else:
+                island_color = utils.COLORS_DICT['Player'][island.own_player_id]
+            self.print_text(font_obj=self.island_font_obj, text=island_life_text, frontend_location=text_location,
+                            color=island_color)
+
+            # island ships
+            island_ships_text = f'Ships: {len(island.ships)}'
+            text_location = np.array(island.frontend_obj.frontend_location) + np.array(
+                [100, 20 + self.island_font_size])
+            if island.ships:
+                island_ships_color = utils.COLORS_DICT['Player'][island.ships[0].player_id]
+            else:
+                island_ships_color = utils.COLORS_DICT['Island']
+            self.print_text(font_obj=self.island_font_obj, text=island_ships_text, frontend_location=text_location,
+                            color=island_ships_color)
+
+        # print game progress on screen
+        num_players = len(self.game_api.players)
+        text = f'Turn: {self.game_api.num_turn} / {self.max_num_turns} ' \
+               f'({round(self.game_api.num_turn / self.max_num_turns  * 100)}%)'
+        text_location = np.array([0, 0]) + num_players * np.array([0, self.player_font_size])
+        text_color = utils.COLORS_DICT['Island']
+        self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
+                        color=text_color)
+
         pg.display.flip()
+
+    def print_text(self, font_obj, text, frontend_location, color):
+        text_surface = font_obj.render(text, True, color)
+        self.screen.blit(text_surface, frontend_location)
 
     def update_islands_life(self):
         for island in self.game_api.islands:
