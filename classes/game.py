@@ -1,5 +1,3 @@
-from time import sleep
-
 import numpy as np
 import pygame as pg
 from pygame.locals import KEYDOWN, K_ESCAPE
@@ -305,7 +303,6 @@ class Game:
         self.print_text(font_obj=self.player_won_font_obj, text=text,
                         frontend_location=text_location, color=text_color)
         pg.display.flip()
-        sleep(1)
 
     def update_islands(self):
         for island in self.game_api.islands:
