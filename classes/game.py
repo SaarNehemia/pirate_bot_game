@@ -6,6 +6,7 @@ from pygame.locals import KEYDOWN, K_ESCAPE
 
 import utils
 from classes.api import API
+from classes.player import Player
 from classes.ship import Ship
 
 
@@ -86,14 +87,8 @@ class Game:
                 print(f"{self.player_name_won} won!")
                 running = False
 
-                text = f"{other_player.player_name} won!"
-                text_width, text_height = self.player_won_font_obj.size(text)
-                text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
-                                 utils.SCREEN_HEIGHT // 2 - text_height // 2]
-                text_color = utils.COLORS_DICT['Player'][other_player.player_id]
-                self.print_text(font_obj=self.player_won_font_obj, text=text,
-                                frontend_location=text_location, color=text_color)
-                pg.display.flip()
+                if self.to_draw_game:
+                    self.print_result(player=other_player)
 
                 if self.debug_mode:
                     raise e
@@ -104,15 +99,7 @@ class Game:
                 running = False
 
                 if self.to_draw_game:
-                    text = "Draw!"
-                    text_width, text_height = self.player_won_font_obj.size(text)
-                    text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
-                                     utils.SCREEN_HEIGHT // 2 - text_height // 2]
-                    text_color = utils.COLORS_DICT['Island']
-                    self.print_text(font_obj=self.player_won_font_obj, text=text,
-                                    frontend_location=text_location, color=text_color)
-                    pg.display.flip()
-                    sleep(1)
+                    self.print_result(player="")
             else:
                 self.game_api.num_turn += 1
 
@@ -139,15 +126,7 @@ class Game:
                 running = False
 
                 if self.to_draw_game:
-                    text = f"{player.player_name} won!"
-                    text_width, text_height = self.player_won_font_obj.size(text)
-                    text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
-                                     utils.SCREEN_HEIGHT // 2 - text_height // 2]
-                    text_color = utils.COLORS_DICT['Player'][player.player_id]
-                    self.print_text(font_obj=self.player_won_font_obj, text=text,
-                                    frontend_location=text_location, color=text_color)
-                    pg.display.flip()
-                    sleep(1)
+                    self.print_result(player=player)
 
         return running
 
@@ -258,49 +237,75 @@ class Game:
         for player in self.game_api.players:
             num_owned_islands = len(self.game_api.get_islands_info(player_id=player.player_id))
             num_ships = len(player.ships)
-            player_text = f'{player.player_name}: {num_owned_islands} islands, {num_ships} ships'
+            text = f'{player.player_name}: {num_owned_islands} islands, {num_ships} ships'
             text_location = np.array([0, 0]) + player.player_id * np.array([0, self.player_font_size])
-            player_color = utils.COLORS_DICT['Player'][player.player_id]
-            self.print_text(font_obj=self.player_font_obj, text=player_text, frontend_location=text_location,
-                            color=player_color)
-
-        # print islands status on screen
-        for island in self.game_api.islands:
-            # island life
-            island_life_text = f'Life: {island.current_life}'
-            text_location = np.array(island.frontend_obj.frontend_location) + np.array([100, 20])
-            if island.own_player_id == -1:
-                island_color = utils.COLORS_DICT['Island']
-            else:
-                island_color = utils.COLORS_DICT['Player'][island.own_player_id]
-            self.print_text(font_obj=self.island_font_obj, text=island_life_text, frontend_location=text_location,
-                            color=island_color)
-
-            # island ships
-            island_ships_text = f'Ships: {len(island.ships)}'
-            text_location = np.array(island.frontend_obj.frontend_location) + np.array(
-                [100, 20 + self.island_font_size])
-            if island.ships:
-                island_ships_color = utils.COLORS_DICT['Player'][island.ships[0].player_id]
-            else:
-                island_ships_color = utils.COLORS_DICT['Island']
-            self.print_text(font_obj=self.island_font_obj, text=island_ships_text, frontend_location=text_location,
-                            color=island_ships_color)
+            text__color = utils.COLORS_DICT['Player'][player.player_id]
+            self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
+                            color=text__color)
 
         # print game progress on screen
         num_players = len(self.game_api.players)
         text = f'Turn: {self.game_api.num_turn} / {self.max_num_turns} ' \
-               f'({round(self.game_api.num_turn / self.max_num_turns  * 100)}%)'
+               f'({round(self.game_api.num_turn / self.max_num_turns * 100)}%)'
         text_location = np.array([0, 0]) + num_players * np.array([0, self.player_font_size])
         text_color = utils.COLORS_DICT['Island']
         self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
                         color=text_color)
+
+        # print islands status on screen
+        for island in self.game_api.islands:
+            # island life
+            text = f'Life: {island.current_life}'
+            text_location = np.array(island.frontend_obj.frontend_location) + np.array([100, 20])
+            if island.own_player_id == -1:
+                text_color = utils.COLORS_DICT['Island']
+            else:
+                text_color = utils.COLORS_DICT['Player'][island.own_player_id]
+            self.print_text(font_obj=self.island_font_obj, text=text, frontend_location=text_location,
+                            color=text_color)
+
+            # island timer
+            text = f'Timer: {island.timer}'
+            text_location = text_location + np.array([0, self.island_font_size])
+            if island.own_player_id == -1:
+                text_color = utils.COLORS_DICT['Island']
+            else:
+                text_color = utils.COLORS_DICT['Player'][island.own_player_id]
+            self.print_text(font_obj=self.island_font_obj, text=text, frontend_location=text_location,
+                            color=text_color)
+
+            # island ships
+            text = f'Ships: {len(island.ships)}'
+            text_location = text_location + np.array([0, self.island_font_size])
+            if island.ships:
+                text_color = utils.COLORS_DICT['Player'][island.ships[0].player_id]
+            else:
+                text_color = utils.COLORS_DICT['Island']
+            self.print_text(font_obj=self.island_font_obj, text=text, frontend_location=text_location,
+                            color=text_color)
 
         pg.display.flip()
 
     def print_text(self, font_obj, text, frontend_location, color):
         text_surface = font_obj.render(text, True, color)
         self.screen.blit(text_surface, frontend_location)
+
+    def print_result(self, player):
+        if isinstance(player, Player):
+            text = f"{player.player_name} won!"
+            text_color = utils.COLORS_DICT['Player'][player.player_id]
+        else:
+            text = "Draw!"
+            text_color = utils.COLORS_DICT['Island']
+
+        text_width, text_height = self.player_won_font_obj.size(text)
+        text_location = [utils.SCREEN_WIDTH // 2 - text_width // 2,
+                         utils.SCREEN_HEIGHT // 2 - text_height // 2]
+
+        self.print_text(font_obj=self.player_won_font_obj, text=text,
+                        frontend_location=text_location, color=text_color)
+        pg.display.flip()
+        sleep(1)
 
     def update_islands(self):
         for island in self.game_api.islands:
@@ -313,31 +318,42 @@ class Game:
                 else:
                     island.current_life -= num_island_ships
 
-            # Island captured or neutralized
+            # Island neutralized
             if island.current_life == 0:
                 island.own_player_id = -1
                 island.frontend_obj.change_to_neutral_color()
-            if island.current_life < 0:
+                island.timer = island.ship_creation_time
+
+            # Island captured
+            elif island.current_life < 0:
                 island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
                 island.current_life = -island.current_life
+                island.turn_captured = self.game_api.num_turn
 
             # Create ships on island
-            # TODO - timer starts only when an island is captured!
-            # TODO - print timer of each island.
-            if self.game_api.num_turn % island.ship_creation_time == 0 and island.own_player_id != -1:
-                if island.ships:
-                    island_ships_player_id = island.ships[0].player_id
+            if island.own_player_id != -1:
+                # decrease timer
+                island.timer -= 1
 
-                    # friendly ships on island
-                    if island.own_player_id == island_ships_player_id:
+                # create new ship when timer reached zero and reset timer
+                if island.timer == 0:
+                    # create new ship
+                    if island.ships:
+                        island_ships_player_id = island.ships[0].player_id
+
+                        # friendly ships on island
+                        if island.own_player_id == island_ships_player_id:
+                            self.create_ship_on_island(island)
+
+                        # enemy ships on island
+                        else:
+                            self.kill_ship_on_island(ship=island.ships[0], island=island)
+                    else:
                         self.create_ship_on_island(island)
 
-                    # enemy ships on island
-                    else:
-                        self.kill_ship_on_island(ship=island.ships[0], island=island)
-                else:
-                    self.create_ship_on_island(island)
+                    # reset timer
+                    island.timer = island.ship_creation_time
 
     def create_ship_on_island(self, island):
         player = self.game_api.players[island.own_player_id]
