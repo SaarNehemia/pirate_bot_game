@@ -9,9 +9,14 @@ from classes.ship import Ship
 
 
 class Game:
-    def __init__(self, game_api: API, to_draw_game: bool, debug_mode: bool):
+    def __init__(self, game_api: API,
+                 game_number: int, num_games: int, wins_count: dict,
+                 to_draw_game: bool, debug_mode: bool):
         # Init API
         self.game_api = game_api
+        self.game_number = game_number
+        self.num_games = num_games
+        self.wins_count = wins_count
 
         # Init backend (board)
         self.player_name_won = ""
@@ -33,7 +38,7 @@ class Game:
             pg.display.set_caption('Pirate Bot Game')
 
             # init text font objects
-            self.player_font_size = 24
+            self.player_font_size = 16
             self.player_font_obj = pg.font.Font(pg.font.get_default_font(), self.player_font_size)
             self.island_font_size = 12
             self.island_font_obj = pg.font.Font(pg.font.get_default_font(), self.island_font_size)
@@ -86,7 +91,7 @@ class Game:
                 running = False
 
                 if self.to_draw_game:
-                    self.print_result(player=other_player)
+                    self.print_game_result_on_screen(player=other_player)
 
                 if self.debug_mode:
                     raise e
@@ -97,7 +102,7 @@ class Game:
                 running = False
 
                 if self.to_draw_game:
-                    self.print_result(player="")
+                    self.print_game_result_on_screen(player="")  # Draw!
             else:
                 self.game_api.num_turn += 1
 
@@ -124,7 +129,7 @@ class Game:
                 running = False
 
                 if self.to_draw_game:
-                    self.print_result(player=player)
+                    self.print_game_result_on_screen(player=player)
 
         return running
 
@@ -231,25 +236,48 @@ class Game:
                                board_size=self.game_api.board_size,
                                screen=self.screen)
 
-        # print players status on screen
-        for player in self.game_api.players:
-            num_owned_islands = len(self.game_api.get_islands_info(player_id=player.player_id))
-            num_ships = len(player.ships)
-            text = f'{player.player_name}: {num_owned_islands} islands, {num_ships} ships'
-            text_location = np.array([0, 0]) + player.player_id * np.array([0, self.player_font_size])
-            text__color = utils.COLORS_DICT['Player'][player.player_id]
-            self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
-                            color=text__color)
+        # print text on screen
+        self.print_game_status_on_screen()
+        self.print_islands_status_on_screen()
 
-        # print game progress on screen
-        num_players = len(self.game_api.players)
-        text = f'Turn: {self.game_api.num_turn} / {self.max_num_turns} ' \
-               f'({round(self.game_api.num_turn / self.max_num_turns * 100)}%)'
-        text_location = np.array([0, 0]) + num_players * np.array([0, self.player_font_size])
+        pg.display.flip()
+
+    def print_game_status_on_screen(self):
+        # print game number on screen
+        text = f'Game: {self.game_number} / {self.num_games} ' \
+               f'({round(self.game_number / self.num_games * 100)}%)'
+        text_location = np.array([0, 0])
         text_color = utils.COLORS_DICT['Island']
         self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
                         color=text_color)
 
+        # print game goal on screen
+        text = f'Goal: capture {self.game_api.victory_criterion} islands'
+        text_location = text_location + np.array([0, self.player_font_size])
+        text_color = utils.COLORS_DICT['Island']
+        self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
+                        color=text_color)
+
+        # print turn number on screen
+        text = f'Turn: {self.game_api.num_turn} / {self.max_num_turns} ' \
+               f'({round(self.game_api.num_turn / self.max_num_turns * 100)}%)'
+        text_location = text_location + np.array([0, self.player_font_size])
+        text_color = utils.COLORS_DICT['Island']
+        self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
+                        color=text_color)
+
+        # print players status on screen
+        for player in self.game_api.players:
+            num_owned_islands = len(self.game_api.get_islands_info(player_id=player.player_id))
+            num_ships = len(player.ships)
+            text = f'{player.player_name} ({self.wins_count[player.player_name]}): ' \
+                   f'{num_owned_islands} islands, {num_ships} ships'
+            text_location = text_location + np.array([0, self.player_font_size])
+            text__color = utils.COLORS_DICT['Player'][player.player_id]
+            self.print_text(font_obj=self.player_font_obj, text=text, frontend_location=text_location,
+                            color=text__color)
+
+    def print_islands_status_on_screen(self):
         # print islands status on screen
         for island in self.game_api.islands:
             # island life
@@ -282,13 +310,7 @@ class Game:
             self.print_text(font_obj=self.island_font_obj, text=text, frontend_location=text_location,
                             color=text_color)
 
-        pg.display.flip()
-
-    def print_text(self, font_obj, text, frontend_location, color):
-        text_surface = font_obj.render(text, True, color)
-        self.screen.blit(text_surface, frontend_location)
-
-    def print_result(self, player):
+    def print_game_result_on_screen(self, player):
         if isinstance(player, Player):
             text = f"{player.player_name} won!"
             text_color = utils.COLORS_DICT['Player'][player.player_id]
@@ -303,6 +325,10 @@ class Game:
         self.print_text(font_obj=self.player_won_font_obj, text=text,
                         frontend_location=text_location, color=text_color)
         pg.display.flip()
+
+    def print_text(self, font_obj, text, frontend_location, color):
+        text_surface = font_obj.render(text, True, color)
+        self.screen.blit(text_surface, frontend_location)
 
     def update_islands(self):
         for island in self.game_api.islands:

@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # ----------------------------------------- Choose games settings ----------------------------------------- #
     player_names: list[str] = ['yossi', 'saar']
     board_name: str = 'board1'
-    num_games: int = 20
+    num_games: int = 5
     max_num_turns: int = 1000
     to_draw_game: bool = True
     debug_mode = True
@@ -15,27 +15,26 @@ if __name__ == '__main__':
 
     # Init game results count
     wins_count = dict((player_name, 0) for player_name in player_names)
-    draw_count = 0
 
     # Start game
-    for i in range(num_games):
-        print(f"****************** Game number {i + 1} out of {num_games} started ******************")
+    for game_number in range(1, num_games + 1):
+        print(f"****************** Game number {game_number} out of {num_games} started ******************")
 
         # init API and game
         game_api = API(board_name=board_name,
                        player_names=player_names,
                        max_num_turns=max_num_turns)
-        current_game = Game(game_api, to_draw_game, debug_mode)
+        current_game = Game(game_api=game_api,
+                            game_number=game_number, num_games=num_games, wins_count=wins_count,
+                            to_draw_game=to_draw_game, debug_mode=debug_mode)
 
         # Play game
         player_name_won = current_game()
 
         # Save game result
-        if player_name_won == "draw":
-            draw_count += 1
-        else:
+        if player_name_won != "draw":
             wins_count[player_name_won] += 1
 
     # Print all games summary result
+    print(f"{num_games=}")
     print(f"{wins_count=}")
-    print(f"{draw_count=}")
