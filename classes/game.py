@@ -319,14 +319,14 @@ class Game:
             if island.current_life == 0:
                 island.own_player_id = -1
                 island.frontend_obj.change_to_neutral_color()
-                island.timer = island.ship_creation_time
+                island.timer = island.ship_creation_time  # reset timer
 
             # Island captured
             elif island.current_life < 0:
                 island.own_player_id = island_ships_player_id
                 island.frontend_obj.change_to_player_color(island.own_player_id)
                 island.current_life = -island.current_life
-                island.turn_captured = self.game_api.num_turn
+                island.timer = island.ship_creation_time  # reset timer
 
             # Create ships on island
             if island.own_player_id != -1:
