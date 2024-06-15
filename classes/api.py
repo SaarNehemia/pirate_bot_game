@@ -213,9 +213,9 @@ class API():
         # update ship location
         print(f"ship {ship_id} move from {ship.location} to {new_location}")
         if not (new_location == ship.location).all():
-            self._update_tile_ship_left(ship)
+            self.__update_tile_ship_left(ship)
             ship.update_location(new_location, self.board_size)
-            self._update_tile_ship_entered(ship)
+            self.__update_tile_ship_entered(ship)
 
     def check_ship_route_to_destination(self, player_id: int, ship_id: int, destination: np.ndarray) \
             -> tuple[np.ndarray, dict]:
@@ -277,7 +277,7 @@ class API():
                 direction_value = location_diff / max(abs(location_diff))
 
             # get new location and check for collision
-            direction_key = self._get_direction_key(direction_value)
+            direction_key = self.__get_direction_key(direction_value)
             new_location = last_location + self.directions_dict[direction_key]
             collision_info = self.check_location(new_location)
 
@@ -287,7 +287,7 @@ class API():
                 random_index = int(not random_index)
                 direction_value = np.array([location_diff[random_index], 0]) / abs(location_diff[random_index])
                 direction_value = np.flip(direction_value) if random_index else direction_value  # vertical if needed
-                direction_key = self._get_direction_key(direction_value)
+                direction_key = self.__get_direction_key(direction_value)
                 new_location = last_location + self.directions_dict[direction_key]
                 collision_info = self.check_location(new_location)
 
@@ -316,25 +316,25 @@ class API():
         collision_info = dict()
 
         if isinstance(current_obj, str):  # Sea tile
-            collision_info = self._set_collision_info('no', None)
+            collision_info = self.__set_collision_info('no', None)
 
         elif isinstance(current_obj, Block):  # block tile
             print(f'There is a block in {location}')
-            collision_info = self._set_collision_info('blocks', None)
+            collision_info = self.__set_collision_info('blocks', None)
 
         elif isinstance(current_obj, Island):  # island tile
             print(f'There is an island in {location}')
-            collision_info = self._set_collision_info('islands', current_obj.island_id)
+            collision_info = self.__set_collision_info('islands', current_obj.island_id)
 
         elif isinstance(current_obj, Ship):  # ship tile
             print(f'There is another ship in {location}')
-            collision_info = self._set_collision_info('ships', (current_obj.player_id, current_obj.ship_id))
+            collision_info = self.__set_collision_info('ships', (current_obj.player_id, current_obj.ship_id))
 
         return collision_info
 
     # --------------------------------- INTERNAL METHODS ------------------------------------------ #
 
-    def _get_direction_key(self, direction_value: np.ndarray) -> str:
+    def __get_direction_key(self, direction_value: np.ndarray) -> str:
         """
         This function get direction key (letter) from direction value (vector).
         :param direction_value: must be only vertical or only horizontal.
@@ -348,12 +348,12 @@ class API():
                 return direction_key
 
     @staticmethod
-    def _set_collision_info(collision_type: str, collided_object_id=Union[int, tuple[int, int]]):
+    def __set_collision_info(collision_type: str, collided_object_id=Union[int, tuple[int, int]]):
         collision_info = {'collision type': collision_type,
                           'collided object id': collided_object_id}
         return collision_info
 
-    def _update_tile_ship_left(self, ship: Ship):
+    def __update_tile_ship_left(self, ship: Ship):
         """
         This function checks if ship was on island or not and update board accordingly.
         :param ship:
@@ -365,7 +365,7 @@ class API():
             print(f'ship of {self.players[ship.player_id].player_name} left island in {current_obj.location}')
             current_obj.remove_ship(ship)
 
-    def _update_tile_ship_entered(self, ship: Ship):
+    def __update_tile_ship_entered(self, ship: Ship):
         """
         This function checks final location of ship after turn and update board accordingly.
         If island - check if island is safe: safe - no ships or only only same team ships dock here. Then, dock.
@@ -394,23 +394,23 @@ class API():
 
                 # kills your ship and one enemy ship
                 island.remove_ship(enemy_ship)
-                self._ships_collide(enemy_ship, ship)
+                self.__ships_collide(enemy_ship, ship)
 
         # ship collision
         elif isinstance(current_obj, Ship):
             other_ship = current_obj
-            self._ships_collide(ship, other_ship)
+            self.__ships_collide(ship, other_ship)
             self.board[ship.location[0]][ship.location[1]] = 'Sea'
 
         # ship destination is sea
         else:
             self.board[ship.location[0]][ship.location[1]] = ship
 
-    def _ships_collide(self, ship1: Ship, ship2: Ship):
-        self._kill_ship(ship1)
-        self._kill_ship(ship2)
+    def __ships_collide(self, ship1: Ship, ship2: Ship):
+        self.__kill_ship(ship1)
+        self.__kill_ship(ship2)
 
-    def _kill_ship(self, ship: Ship):
+    def __kill_ship(self, ship: Ship):
         # Remove from backend
         player = self.players[ship.player_id]
         player.remove_ship(ship)

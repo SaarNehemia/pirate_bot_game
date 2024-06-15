@@ -125,7 +125,7 @@ class Game:
 
     def play_player_turn(self, player):
         player.player_class.do_turn(self.game_api)
-        self.update_islands_life()
+        self.update_islands()
         self.reset_ships_is_moved()
 
     def check_for_victory(self):
@@ -302,7 +302,7 @@ class Game:
         text_surface = font_obj.render(text, True, color)
         self.screen.blit(text_surface, frontend_location)
 
-    def update_islands_life(self):
+    def update_islands(self):
         for island in self.game_api.islands:
             # Add/decrease life to island with ships
             if island.ships:
@@ -323,6 +323,8 @@ class Game:
                 island.current_life = -island.current_life
 
             # Create ships on island
+            # TODO - timer starts only when an island is captured!
+            # TODO - print timer of each island.
             if self.game_api.num_turn % island.ship_creation_time == 0 and island.own_player_id != -1:
                 if island.ships:
                     island_ships_player_id = island.ships[0].player_id
