@@ -1,4 +1,3 @@
-import utils
 from classes.api import API
 from classes.game import Game
 
