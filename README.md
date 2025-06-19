@@ -7,13 +7,13 @@ Develop a bot that moves ships across the board, capture islands and destroy ene
 
 Download Git Bash.
 
-Open Git Bash and change to the directory you wish to save you project in using the cd command (note you must use linux syntax, for example c:/users/<user>/projects).
+Open Git Bash and change to the directory you wish to save you project in using the cd command (note you must use linux syntax, for example c:/users/saar.nehemia/projects).
 
 Press code (green button) and copy HTTPS link to clone project to your local computer.
 
 You can also copy this link directly: https://github.com/SaarNehemia/pirate_bot_game.git
 
-write "git clone <link>". (paste HTTPS link)
+write "git clone {paste HTTPS link}".
 
 There you go - project is saved on your local computer.
 
@@ -27,9 +27,9 @@ Open project folder in your preferred python IDE (for example PyCharm).
 
 Write in Terminal:
 
-    python -m venv ./venv
+    python -m venv ./.venv
 
-    venv\Scripts\activate.bat
+    .venv\Scripts\activate.bat
 
     pip install -r requirements.txt
 
