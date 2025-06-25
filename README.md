@@ -1,23 +1,19 @@
-# pirate_bot_game
+![image](https://github.com/user-attachments/assets/92406c71-216a-402e-ab3b-524f53301643)# pirate_bot_game
 pirate bot game (inspired by Skillz high school coding competition).
 
 Develop a bot that moves ships across the board, capture islands and destroy enemy ships.
 
-## clone git project using Git Bash
+# Fork my repoistory
+Follow this guide to fork and clone my repo: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo
 
-Download Git Bash.
+## Notes
 
-Open Git Bash and change to the directory you wish to save you project in using the cd command (note you must use linux syntax, for example c:/users/saar.nehemia/projects).
-
-Press code (green button) and copy HTTPS link to clone project to your local computer.
-
-You can also copy this link directly: https://github.com/SaarNehemia/pirate_bot_game.git
-
-write "git clone {paste HTTPS link}".
-
-There you go - project is saved on your local computer.
-
-(You can also use Git for Desktop to clone the project if you are familiar with it)
+* You need to Download Git Bash.
+* I recommend storing all your Git projects in one designated folder. Than, you can Open Git Bash in the folder by navigating to this folder using the file explorer and right click -> Open Git Bash Here. Alternatively, you can open Git Bash and change directory using the cd command (note you must use linux syntax, for example c:/users/saar.nehemia/projects).
+* In the GitHub project site, Press code (green button) and copy HTTPS link to clone project to your local computer. You can also copy this link directly: https://github.com/SaarNehemia/pirate_bot_game.git
+* write "git clone {paste HTTPS link}".
+* There you go - project is saved on your local computer.
+* (You can also use Git for Desktop to clone the project if you are familiar with it).
 
 ## Open Python IDE
 
@@ -53,7 +49,7 @@ There you go - all set up.
         <Your code to execute each turn here>
 
 4. commit and push your code to the remote (origin) and ask for a pull request.
-5. I will check that you hadn't do something illegal and cofirm if so.
+5. I will check that everything is ok and confirm if so.
 
 
 
