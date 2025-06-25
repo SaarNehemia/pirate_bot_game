@@ -1,9 +1,9 @@
-![image](https://github.com/user-attachments/assets/92406c71-216a-402e-ab3b-524f53301643)# pirate_bot_game
+# About pirate_bot_game
 pirate bot game (inspired by Skillz high school coding competition).
 
 Develop a bot that moves ships across the board, capture islands and destroy enemy ships.
 
-# Fork my repoistory
+## Fork my repoistory
 Follow this guide to fork and clone my repo: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo
 
 ## Notes
