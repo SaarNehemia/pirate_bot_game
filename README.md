@@ -6,7 +6,7 @@ Develop a bot that moves ships across the board, capture islands and destroy ene
 ## Fork my repoistory
 Follow this guide to fork and clone my repo: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo
 
-## Notes
+### Notes
 
 * You need to Download Git Bash.
 * I recommend storing all your Git projects in one designated folder. Than, you can Open Git Bash in the folder by navigating to this folder using the file explorer and right click -> Open Git Bash Here. Alternatively, you can open Git Bash and change directory using the cd command (note you must use linux syntax, for example c:/users/saar.nehemia/projects).
